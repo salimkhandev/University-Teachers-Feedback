@@ -1,0 +1,725 @@
+# BUILD_THIS_APP.md
+# Student Feedback & AI Summarization System
+# ═══════════════════════════════════════════
+# HOW TO USE THIS FILE:
+# Give this entire file to Claude (or any AI) and say:
+# "Read this file and build the system step by step."
+# The AI will read each phase, implement it, verify it, then move to the next.
+# ═══════════════════════════════════════════
+
+---
+
+## IDENTITY & GOAL
+
+You are a senior full-stack engineer. Your job is to build a complete
+**Student Feedback & AI Summarization Platform** from scratch using this file
+as your single source of truth.
+
+**Rules you must follow:**
+1. Read ALL phases before writing any code.
+2. Build ONE phase at a time. Do not skip ahead.
+3. After each phase, say: "✅ Phase N complete. Files created: [list]. Moving to Phase N+1."
+4. If you hit an error, fix it before moving forward. Do not continue with broken code.
+5. Ask no questions — all decisions are already made in this file.
+
+---
+
+## TECH STACK (fixed — do not substitute)
+
+| Layer        | Technology                        |
+|--------------|-----------------------------------|
+| Backend      | Node.js + Express + TypeScript    |
+| Database     | MongoDB + Mongoose                |
+| Auth         | JWT (access + refresh tokens)     |
+| AI           | Google Gemini API                 |
+| Frontend     | React + TypeScript + Vite         |
+| Charts       | Recharts                          |
+| File upload  | Multer + csv-parse                |
+| Styling      | Tailwind CSS                      |
+| HTTP client  | Axios (with JWT interceptor)      |
+
+---
+
+## FOLDER STRUCTURE (create exactly this)
+
+```
+/project-root
+  /backend
+    /src
+      /config         db.ts, env.ts
+      /models         all 9 Mongoose models
+      /routes         all route files
+      /middleware     auth.ts, rbac.ts, upload.ts
+      /services       gemini.ts, summary.ts, csv.ts
+      /utils          jwt.ts, hash.ts, rollNumber.ts
+    server.ts
+    package.json
+    tsconfig.json
+
+  /frontend
+    /src
+      /api            client.ts (Axios instance)
+      /components
+        /auth         LoginForm.tsx, ProtectedRoute.tsx
+        /student      Dashboard.tsx, TeacherCard.tsx, FeedbackForm.tsx, FeedbackBadge.tsx
+        /teacher      Dashboard.tsx, RatingChart.tsx, SummaryPanel.tsx, AIChat.tsx
+        /admin        Dashboard.tsx, TeacherRankingTable.tsx, ReportButton.tsx, RankChart.tsx
+        /setup        DeptForm.tsx, SemesterForm.tsx, TeacherForm.tsx, StudentForm.tsx, CSVUpload.tsx
+      /hooks          useAuth.ts, useFeedback.ts, useTeacherSummary.ts
+      /context        AuthContext.tsx
+      /pages          Login.tsx, StudentDashboard.tsx, TeacherDashboard.tsx, AdminDashboard.tsx
+      App.tsx
+      main.tsx
+    package.json
+    vite.config.ts
+    tailwind.config.js
+```
+
+---
+
+## PHASE 1 — Project Initialization
+
+### 1A. Backend setup
+```bash
+mkdir -p project-root/backend/src/{config,models,routes,middleware,services,utils}
+cd project-root/backend
+npm init -y
+npm install express mongoose jsonwebtoken bcryptjs multer csv-parse dotenv cors
+npm install -D typescript ts-node @types/express @types/node @types/jsonwebtoken @types/bcryptjs nodemon
+npx tsc --init
+```
+
+`tsconfig.json` settings:
+- `"target": "ES2020"`
+- `"module": "commonjs"`
+- `"outDir": "./dist"`
+- `"rootDir": "./src"`
+- `"strict": true`
+
+### 1B. Frontend setup
+```bash
+cd project-root
+npm create vite@latest frontend -- --template react-ts
+cd frontend
+npm install axios recharts react-router-dom
+npm install -D tailwindcss postcss autoprefixer
+npx tailwindcss init -p
+```
+
+### 1C. Environment file (`backend/.env`)
+```
+PORT=5000
+MONGO_URI=mongodb://localhost:27017/feedback_system
+JWT_SECRET=your_jwt_secret_here
+JWT_REFRESH_SECRET=your_refresh_secret_here
+GEMINI_API_KEY=your_gemini_api_key_here
+```
+
+**Verify Phase 1:** Both folders exist. `npm run dev` starts without errors on both sides.
+
+---
+
+## PHASE 2 — MongoDB Models (9 collections)
+
+Build each model exactly as specified. Apply all indexes stated.
+
+### Model 1: User
+```typescript
+// src/models/User.ts
+{
+  username:  { type: String, unique: true, required: true },
+  password:  { type: String, required: true },          // bcrypt hash
+  role:      { type: String, enum: ['admin','teacher','student'], required: true },
+  name:      { type: String, required: true },
+  email:     { type: String },
+  createdAt: { type: Date, default: Date.now }
+}
+```
+
+### Model 2: Department
+```typescript
+// src/models/Department.ts
+{
+  name: { type: String, required: true },
+  code: { type: String, required: true, unique: true }
+}
+```
+
+### Model 3: Semester
+```typescript
+// src/models/Semester.ts
+{
+  departmentId:   { type: ObjectId, ref: 'Department', required: true },
+  number:         { type: Number, required: true },
+  label:          { type: String }                     // e.g. "Semester 3 - Fall 2024"
+}
+```
+
+### Model 4: Section
+```typescript
+// src/models/Section.ts
+{
+  semesterId:    { type: ObjectId, ref: 'Semester', required: true },
+  name:          { type: String, required: true }      // "A", "B", "C"
+}
+```
+
+### Model 5: Subject
+```typescript
+// src/models/Subject.ts
+{
+  sectionId:  { type: ObjectId, ref: 'Section', required: true },
+  name:       { type: String, required: true },
+  code:       { type: String }
+}
+```
+
+### Model 6: TeacherAssignment  ← CRITICAL junction collection
+```typescript
+// src/models/TeacherAssignment.ts
+{
+  teacherId:   { type: ObjectId, ref: 'User', required: true },
+  subjectId:   { type: ObjectId, ref: 'Subject', required: true },
+  sectionId:   { type: ObjectId, ref: 'Section', required: true },
+  semesterId:  { type: ObjectId, ref: 'Semester', required: true }
+}
+// COMPOUND UNIQUE INDEX — prevents duplicate assignments:
+index: { teacherId: 1, subjectId: 1, sectionId: 1 }, { unique: true }
+```
+
+### Model 7: Student
+```typescript
+// src/models/Student.ts
+{
+  userId:      { type: ObjectId, ref: 'User', required: true },
+  sectionId:   { type: ObjectId, ref: 'Section', required: true },
+  semesterId:  { type: ObjectId, ref: 'Semester', required: true },
+  rollNumber:  { type: String, unique: true },         // auto-generated: DEPT-YEAR-SEQ
+  cnic:        { type: String, unique: true, sparse: true },
+  phone:       { type: String }
+}
+```
+
+### Model 8: Feedback  ← Core feedback collection
+```typescript
+// src/models/Feedback.ts
+{
+  studentId:    { type: ObjectId, ref: 'Student', required: true },
+  assignmentId: { type: ObjectId, ref: 'TeacherAssignment', required: true },
+  rating:       { type: Number, min: 1, max: 10, required: true },
+  comment:      { type: String, default: '' },
+  version:      { type: Number, default: 1 },          // increments on every edit
+  createdAt:    { type: Date, default: Date.now },
+  updatedAt:    { type: Date, default: Date.now }
+}
+// COMPOUND UNIQUE INDEX — one feedback per student per assignment:
+index: { studentId: 1, assignmentId: 1 }, { unique: true }
+```
+
+### Model 9: AISummary (cache collection)
+```typescript
+// src/models/AISummary.ts
+{
+  teacherId:     { type: ObjectId, ref: 'User', required: true, unique: true },
+  summaryText:   { type: String },
+  feedbackCount: { type: Number },                     // count at time of generation
+  generatedAt:   { type: Date, default: Date.now }
+}
+```
+
+### Model 10: ChatSession
+```typescript
+// src/models/ChatSession.ts
+{
+  teacherId:  { type: ObjectId, ref: 'User', required: true, unique: true },
+  messages:   [{
+    role:      { type: String, enum: ['user','model'] },
+    content:   { type: String },
+    timestamp: { type: Date, default: Date.now }
+  }]
+}
+```
+
+**Verify Phase 2:** Run a quick Mongoose connection test. All 10 models import without errors.
+
+---
+
+## PHASE 3 — Auth System
+
+### 3A. JWT utilities (`src/utils/jwt.ts`)
+- `generateAccessToken(userId, role)` — expires in 15 minutes
+- `generateRefreshToken(userId)` — expires in 7 days
+- `verifyAccessToken(token)` — returns payload or throws
+- `verifyRefreshToken(token)` — returns payload or throws
+
+### 3B. Auth middleware (`src/middleware/auth.ts`)
+- Extract Bearer token from `Authorization` header
+- Verify with `verifyAccessToken`
+- Attach `req.user = { id, role }` to request
+- Return 401 if missing or invalid
+
+### 3C. RBAC middleware (`src/middleware/rbac.ts`)
+```typescript
+export const requireRole = (...roles: string[]) =>
+  (req, res, next) => {
+    if (!roles.includes(req.user.role)) return res.status(403).json({ error: 'Forbidden' });
+    next();
+  };
+```
+
+### 3D. Auth routes (`src/routes/auth.ts`)
+
+**POST /api/auth/login**
+1. Find user by username
+2. Compare password with bcrypt
+3. Return `{ accessToken, refreshToken, user: { id, name, role } }`
+
+**POST /api/auth/refresh-token**
+1. Verify refresh token
+2. Return new access token
+
+**Verify Phase 3:** Login with a seeded admin user returns two tokens.
+
+---
+
+## PHASE 4 — Setup Routes (Admin only)
+
+All routes prefixed `/api/setup`. All require `auth + requireRole('admin')`.
+
+### POST /api/setup/departments
+Body: `{ name, code }` → create Department
+
+### POST /api/setup/semesters
+Body: `{ departmentId, number, label }` → create Semester
+
+### POST /api/setup/sections
+Body: `{ semesterId, name }` → create Section
+
+### POST /api/setup/subjects
+Body: `{ sectionId, name, code }` → create Subject
+
+### POST /api/setup/teachers
+Body: `{ name, username, password, email }` → create User with role `teacher`
+
+### POST /api/setup/assignments
+Body: `{ teacherId, subjectId, sectionId, semesterId }` → create TeacherAssignment
+- Validate compound unique — return 409 if duplicate
+
+### POST /api/setup/students
+Body: `{ name, username, password, sectionId, semesterId, cnic, phone }`
+1. Create User with role `student`
+2. Generate rollNumber: `DEPT-YEAR-SEQUENCE` (query dept from sectionId chain)
+3. Create Student record
+
+### POST /api/setup/students/bulk-csv
+- Use Multer to accept `.csv` file
+- Parse with `csv-parse`
+- For each row: attempt insert. If `username` or `cnic` already exists → add to `conflicts[]`
+- Return: `{ inserted: N, conflicts: [{ row, reason }] }`
+
+**Verify Phase 4:** Postman/curl each route. Duplicate assignment returns 409.
+
+---
+
+## PHASE 5 — Student Routes
+
+All prefixed `/api/student`. All require `auth + requireRole('student')`.
+
+### GET /api/student/me
+Returns the student's own profile with section and semester populated.
+
+### GET /api/student/assignments
+Logic:
+```typescript
+const student = await Student.findOne({ userId: req.user.id });
+const assignments = await TeacherAssignment.find({
+  sectionId: student.sectionId,
+  semesterId: student.semesterId
+}).populate('teacherId', 'name').populate('subjectId', 'name code');
+
+// For each assignment, check if feedback exists
+const withStatus = await Promise.all(assignments.map(async (a) => {
+  const feedback = await Feedback.findOne({
+    studentId: student._id,
+    assignmentId: a._id
+  });
+  return { ...a.toObject(), feedbackSubmitted: !!feedback, feedbackId: feedback?._id };
+}));
+```
+Return the array with `feedbackSubmitted` boolean per assignment.
+
+**Verify Phase 5:** Student sees their teachers + whether they rated each one.
+
+---
+
+## PHASE 6 — Feedback Routes
+
+Prefixed `/api/feedback`. Require `auth + requireRole('student')`.
+
+### POST /api/feedback
+Body: `{ assignmentId, rating, comment }`
+1. Find student record for `req.user.id`
+2. Check feedback doesn't already exist — return 409 if it does
+3. Create Feedback `{ studentId, assignmentId, rating, comment, version: 1 }`
+
+### PATCH /api/feedback/:id
+Body: `{ rating, comment }`
+1. Find feedback by `_id`
+2. Verify `studentId` matches logged-in student (ownership check)
+3. Update rating and comment
+4. `$inc version by 1`, set `updatedAt = now`
+
+### GET /api/feedback/mine
+Returns all feedback submitted by the logged-in student (populated with teacher + subject names).
+
+**Verify Phase 6:** Submit feedback, then edit it. Version increments from 1 to 2.
+
+---
+
+## PHASE 7 — Teacher Routes
+
+Prefixed `/api/teacher`. Require `auth + requireRole('teacher')`.
+
+### GET /api/teacher/me
+Returns teacher's own User record.
+
+### GET /api/teacher/ratings
+Logic:
+1. Find all TeacherAssignments where `teacherId = req.user.id`
+2. For each assignment, find all Feedback docs
+3. Aggregate: `{ averageRating, totalCount, ratingBreakdown: {1:N, 2:N, ..., 10:N}, allComments }`
+4. Return per-subject breakdown + overall average
+
+### GET /api/teacher/summary
+**Cached Gemini summary logic:**
+```typescript
+const assignments = await TeacherAssignment.find({ teacherId });
+const assignmentIds = assignments.map(a => a._id);
+const currentCount = await Feedback.countDocuments({ assignmentId: { $in: assignmentIds } });
+
+const cached = await AISummary.findOne({ teacherId });
+if (cached && cached.feedbackCount === currentCount) {
+  return res.json({ summary: cached.summaryText, cached: true });
+}
+
+// Call Gemini
+const comments = await Feedback.find({ assignmentId: { $in: assignmentIds } })
+  .select('comment rating');
+const summary = await callGemini(comments);
+
+await AISummary.findOneAndUpdate(
+  { teacherId },
+  { summaryText: summary, feedbackCount: currentCount, generatedAt: new Date() },
+  { upsert: true }
+);
+return res.json({ summary, cached: false });
+```
+
+### GET /api/teacher/chat
+Returns the teacher's full chat history from ChatSession.
+
+### POST /api/teacher/chat
+Body: `{ message }`
+1. Load or create ChatSession for teacher
+2. Append `{ role: 'user', content: message }` to messages
+3. Call Gemini with full conversation history + teacher's ratings as context
+4. Append `{ role: 'model', content: reply }` to messages
+5. Save ChatSession
+6. Return `{ reply }`
+
+**Verify Phase 7:** Second login returns cached summary (fast). New feedback triggers regeneration.
+
+---
+
+## PHASE 8 — Admin Routes
+
+Prefixed `/api/admin`. Require `auth + requireRole('admin')`.
+
+### GET /api/admin/teachers/rankings
+1. Get all teachers (Users with role = 'teacher')
+2. For each teacher: aggregate average rating across all their assignments
+3. Sort descending by average
+4. Return ranked list with `{ teacherId, name, averageRating, totalFeedback }`
+
+### POST /api/admin/report/generate
+**Batched Gemini processing:**
+```typescript
+const teachers = await getAllTeachersWithFeedback();
+const BATCH_SIZE = 10;
+
+for (let i = 0; i < teachers.length; i += BATCH_SIZE) {
+  const batch = teachers.slice(i, i + BATCH_SIZE);
+  await Promise.all(batch.map(teacher => generateAndCacheSummary(teacher)));
+  // Stream progress back: "Processed N/Total teachers"
+}
+return res.json({ message: 'Report generation complete' });
+```
+
+### GET /api/admin/report/status
+Returns count of teachers with cached summaries vs total teachers.
+
+**Verify Phase 8:** Rankings return sorted teachers. Bulk report processes in batches of 10.
+
+---
+
+## PHASE 9 — Gemini Service
+
+File: `src/services/gemini.ts`
+
+```typescript
+import { GoogleGenerativeAI } from '@google/generative-ai';
+
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+
+export async function generateTeacherSummary(comments: string[], ratings: number[]) {
+  const prompt = `
+You are analyzing student feedback for a university teacher.
+Average rating: ${average(ratings)}/10
+Total responses: ${ratings.length}
+
+Student comments:
+${comments.map((c, i) => `${i+1}. "${c}"`).join('\n')}
+
+Write a professional 3-paragraph summary:
+1. Overall performance and student sentiment
+2. Key strengths mentioned
+3. Areas for improvement
+
+Be specific. Do not invent details not in the comments.
+  `;
+  const result = await model.generateContent(prompt);
+  return result.response.text();
+}
+
+export async function chatWithTeacher(messages: {role: string, content: string}[], context: string) {
+  const chat = model.startChat({
+    history: messages.map(m => ({ role: m.role, parts: [{ text: m.content }] }))
+  });
+  const result = await chat.sendMessage(context);
+  return result.response.text();
+}
+```
+
+**Verify Phase 9:** Summary generates without error. Response is coherent text.
+
+---
+
+## PHASE 10 — Frontend: Auth & Routing
+
+### AuthContext (`src/context/AuthContext.tsx`)
+```typescript
+// Store: { user: { id, name, role } | null, accessToken: string | null }
+// Actions: login(tokens, user), logout()
+// On init: check localStorage for existing token
+```
+
+### ProtectedRoute (`src/components/auth/ProtectedRoute.tsx`)
+```typescript
+// Props: allowedRoles: string[]
+// If not logged in → redirect to /login
+// If role not in allowedRoles → redirect to /unauthorized
+// Otherwise → render <Outlet />
+```
+
+### App.tsx routing
+```
+/login                   → LoginForm (public)
+/student/*               → ProtectedRoute allowedRoles=['student']
+/teacher/*               → ProtectedRoute allowedRoles=['teacher']
+/admin/*                 → ProtectedRoute allowedRoles=['admin']
+/unauthorized            → plain message page
+```
+
+### Axios client (`src/api/client.ts`)
+```typescript
+// Base URL: http://localhost:5000/api
+// Request interceptor: add Authorization: Bearer <token>
+// Response interceptor: on 401 → call /auth/refresh-token → retry original request
+//                        if refresh fails → logout() + redirect to /login
+```
+
+**Verify Phase 10:** Login redirects to correct dashboard based on role. Wrong role redirected.
+
+---
+
+## PHASE 11 — Student Dashboard
+
+### Components to build:
+
+**TeacherCard.tsx**
+- Shows: teacher name, subject name, rating badge (green if submitted, grey if pending)
+- Click → opens FeedbackForm
+
+**FeedbackForm.tsx**
+- Slider or star input (1–10)
+- Text area for comment
+- Submit button → POST /api/feedback
+- If already submitted: shows existing values + "Edit" button → PATCH /api/feedback/:id
+- On success: refresh assignment list
+
+**FeedbackBadge.tsx**
+- Green "Submitted (v{version})" or grey "Pending"
+
+**StudentDashboard.tsx**
+- Fetch `/api/student/assignments` on mount
+- Render a TeacherCard for each assignment
+- Show progress: "X of Y teachers rated"
+
+**Verify Phase 11:** Student sees all their teachers. Submits feedback. Badge turns green. Edit updates version.
+
+---
+
+## PHASE 12 — Teacher Dashboard
+
+### Components to build:
+
+**RatingChart.tsx**
+- Recharts `BarChart` of rating distribution (1–10 on X axis, count on Y axis)
+- Fully responsive via `ResponsiveContainer`
+- Show average rating prominently above chart
+
+**SummaryPanel.tsx**
+- Fetch `/api/teacher/summary` on mount
+- Show loading spinner while fetching
+- Display summary text in a card
+- Show "Cached" or "Fresh" badge
+- "Refresh Summary" button to force regeneration (delete cache + re-fetch)
+
+**AIChat.tsx**
+- Load history from `/api/teacher/chat`
+- Message input + Send button
+- Each message in a chat bubble (user = right, model = left)
+- Auto-scroll to bottom on new message
+- Disabled while waiting for response
+
+**TeacherDashboard.tsx**
+- Tabs: "My Ratings" | "AI Summary" | "Chat with AI"
+- Show per-subject breakdown table (subject name, avg rating, count)
+
+**Verify Phase 12:** Charts render. Summary loads fast (cached). Chat appends messages correctly.
+
+---
+
+## PHASE 13 — Admin Dashboard
+
+### Components to build:
+
+**TeacherRankingTable.tsx**
+- Fetch `/api/admin/teachers/rankings`
+- Sortable table: Rank | Name | Avg Rating | Total Feedback
+- Highlight top 3 with gold/silver/bronze badges
+
+**RankChart.tsx**
+- Recharts `BarChart` — teachers on X axis, average rating on Y axis
+- Sorted descending
+- Color bars by performance (green > 7, yellow 5-7, red < 5)
+
+**ReportButton.tsx**
+- "Generate Full Report" button
+- Calls POST `/api/admin/report/generate`
+- Shows progress: "Processing batch N of M..."
+- On complete: shows "✅ All summaries updated"
+
+**AdminDashboard.tsx**
+- Tabs: "Rankings" | "Generate Report"
+- Show total stats: total teachers, total students, total feedback collected
+
+**Verify Phase 13:** Rankings sorted correctly. Report generation shows batch progress.
+
+---
+
+## PHASE 14 — Setup Pages (Admin)
+
+Build a multi-step setup wizard with these forms in order:
+
+1. **DeptForm** — name + code → POST /setup/departments
+2. **SemesterForm** — select dept, enter number + label → POST /setup/semesters
+3. **SectionForm** — select semester, enter name → POST /setup/sections
+4. **SubjectForm** — select section, enter name + code → POST /setup/subjects
+5. **TeacherForm** — name, username, password, email → POST /setup/teachers
+6. **AssignmentForm** — select teacher + subject + section → POST /setup/assignments
+7. **StudentForm** — all student fields → POST /setup/students
+8. **CSVUpload** — file picker (.csv only), upload → POST /setup/students/bulk-csv
+   - Show results table: inserted count + conflicts with reasons
+
+**Verify Phase 14:** Full setup flow works end-to-end. CSV upload shows conflict rows clearly.
+
+---
+
+## PHASE 15 — Final Integration & Testing
+
+Run through this complete scenario:
+
+1. Admin logs in → sets up 1 dept, 1 semester, 2 sections, 3 subjects
+2. Admin creates 3 teachers, assigns each to a subject+section
+3. Admin creates 5 students via CSV (include 1 duplicate to test conflict)
+4. Student logs in → sees their 3 teachers → submits feedback for all 3
+5. Student edits one feedback → version increments to 2
+6. Teacher logs in → sees ratings chart → summary generates and caches
+7. Teacher sends 2 chat messages → history persists after logout
+8. Admin sees rankings → generates full report → all summaries cached
+
+**Expected results:**
+- No 500 errors anywhere
+- Roles block correctly (student can't hit /admin/* routes)
+- Cached summary returns in < 100ms
+- Edit without boolean: `feedbackDoc !== null` is the only status check
+- CSV conflict row returned with reason string
+
+---
+
+## PHASE 16 — Seed Script
+
+Create `backend/src/scripts/seed.ts`:
+
+```typescript
+// Creates:
+// 1 admin user (username: admin, password: admin123)
+// 1 department: Computer Science (CS)
+// 1 semester: Semester 3
+// 2 sections: A, B
+// 3 subjects: OOP, Data Structures, Web Dev
+// 3 teachers (teacher1/pass123, teacher2/pass123, teacher3/pass123)
+// 3 assignments (one teacher per subject in Section A)
+// 3 students (student1/pass123, student2/pass123, student3/pass123) in Section A
+
+// Run with: ts-node src/scripts/seed.ts
+```
+
+**Verify Phase 16:** `ts-node src/scripts/seed.ts` runs without error. Login with `admin / admin123` works.
+
+---
+
+## ERROR HANDLING RULES (apply everywhere)
+
+- All routes wrapped in `try/catch` → return `{ error: message }` with appropriate HTTP status
+- 400 — bad input / validation failure
+- 401 — not authenticated
+- 403 — authenticated but wrong role
+- 404 — resource not found
+- 409 — conflict (duplicate)
+- 500 — unexpected server error (log the full error server-side)
+
+Frontend:
+- All API calls in `try/catch`
+- Show user-friendly error messages (not raw error objects)
+- Loading states on every async action
+
+---
+
+## YOU ARE DONE WHEN:
+
+- [ ] All 16 phases complete with ✅
+- [ ] `npm run dev` starts both backend and frontend without errors
+- [ ] Seed script populates the database
+- [ ] All 3 role dashboards load and function correctly
+- [ ] No TypeScript errors (`tsc --noEmit` passes)
+- [ ] No hardcoded credentials or API keys in code (use `.env`)
+
+---
+
+## START NOW.
+
+Read this entire file first. Then begin Phase 1.
+Say "📋 Plan read. Starting Phase 1 — Project Initialization." before writing any code.

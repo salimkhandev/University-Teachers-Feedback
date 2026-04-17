@@ -1,0 +1,135 @@
+This is a big system — I'll break it into four focused sections: the corrected DB schema (ERD), the full system architecture, the feedback flow, and the AI summarization strategy.
+
+---
+
+## 1. MongoDB collections (corrected schema)
+
+The ERD below shows all 9 collections with their corrected relationships. The key fix is that `feedback` uses a compound key of `(studentId + teacherAssignmentId)` so each student's rating of each teacher-per-subject is unambiguous and editable without status flag confusion.Key schema decisions: `feedback` links to `teacher_assignments` (not to the teacher directly), which solves the ambiguity of "which subject's rating is this." The `version` field on feedback tracks edit history. `ai_summaries` is a cache collection — re-used on login instead of calling Gemini every time. `chat_sessions` stores the full message array per teacher so conversations survive logout.
+
+---
+
+## 2. Full system architecture---
+
+## 3. Feedback flow (the corrected logic)
+
+This is where most of the original issues were concentrated. The corrected flow uses `assignmentId` as the anchor, `version` for edit tracking, and no teacher-level boolean at all.---
+
+## 4. AI summarization strategy (cached, batched)---
+
+## Complete solution specification
+
+Here is every decision spelled out with the reasoning behind it:
+
+### MongoDB collections (9 total)
+
+`users` — single collection for all roles. `role` field is `"admin" | "teacher" | "student"`. bcrypt hash stored here. Unique index on `username`.
+
+`departments` — static master data. Name + code only.
+
+`semesters` — belongs to a department. Stores semester number and a display label.
+
+`sections` — belongs to a semester. A, B, C etc. This is the key scoping unit for both teachers and students.
+
+`subjects` — belongs to a section. This means Section A Semester 3 can have different subjects from Section B, which is correct.
+
+`teacher_assignments` — this is the critical junction collection. It stores `(teacherId, subjectId, sectionId, semesterId)` together as a compound unique index. One teacher can have many assignments. Querying "which teachers does this student have?" means: find all assignments where `sectionId` and `semesterId` match the student.
+
+`students` — profile data. `userId` FK to users. `sectionId + semesterId` FK pins the student to a specific section. Roll number generated as `DEPT-YEAR-SEQUENCE` with a unique index enforced at DB level.
+
+`feedback` — the corrected core collection. Compound unique index on `(studentId, assignmentId)` prevents duplicates. `version` starts at 1 and `$inc`s on every edit. `updatedAt` tracks last edit. No boolean anywhere — "has this student submitted?" = `feedbackDoc !== null`.
+
+`ai_summaries` — cache per teacher. Stores `feedbackCount` at time of generation. On teacher login: if current feedback count > stored count, regenerate. Otherwise return cached. Upsert by `teacherId`.
+
+`chat_sessions` — one document per teacher, `messages` is an array of `{role, content, timestamp}` objects. Loaded on teacher login, appended on each chat turn, saved back.
+
+### Backend route structure
+
+```
+POST   /api/auth/login
+POST   /api/auth/refresh-token
+
+POST   /api/setup/departments
+POST   /api/setup/semesters
+POST   /api/setup/sections
+POST   /api/setup/subjects
+POST   /api/setup/teachers
+POST   /api/setup/students
+POST   /api/setup/students/bulk-csv
+
+GET    /api/student/me
+GET    /api/student/assignments        (my section's teacher_assignments with feedback status)
+
+POST   /api/feedback
+PATCH  /api/feedback/:id
+GET    /api/feedback/mine
+
+GET    /api/teacher/me
+GET    /api/teacher/ratings            (aggregated avg, count, breakdown)
+GET    /api/teacher/summary            (cached Gemini summary)
+GET    /api/teacher/chat
+POST   /api/teacher/chat
+
+GET    /api/admin/teachers/rankings
+POST   /api/admin/report/generate
+GET    /api/admin/report/status
+```
+
+### Fixing issue #6 (section scope on assignments)
+
+When a teacher is assigned, always store `sectionId` in `teacher_assignments`. The admin form must select dept → semester → section → subject → teacher in that order. The student query becomes:
+
+```ts
+TeacherAssignment.find({ sectionId: student.sectionId, semesterId: student.semesterId })
+  .populate('teacherId').populate('subjectId')
+```
+
+### Fixing issue #3 (edit without boolean reset)
+
+Remove `feedbackSubmitted` boolean entirely from the teacher document. Replace all status checks with:
+
+```ts
+const submitted = await Feedback.findOne({ studentId, assignmentId });
+// submitted !== null means done. submitted.version tells you how many edits.
+```
+
+### Fixing issue #5 (admin unbounded Gemini call)
+
+Process in batches of 10 teachers. For each teacher: aggregate their comments from the feedback collection (group by `assignmentId`, collect all comment strings). Send only that teacher's comments to Gemini — not the entire DB. Use `Promise.all` within each batch for parallelism, then move to next batch. Stream results back to the frontend as each batch completes.
+
+### Fixing issue #9 (CSV bulk upload)
+
+Use `multer` for file upload and `csv-parse` for parsing. For each row: attempt `findOneAndUpdate` with `upsert: false` first. If the student already exists (matched by `cnic` or `username`), add to a `conflicts[]` array. After processing all rows, return `{ inserted: N, conflicts: [...rows with reason] }` so the admin can see exactly which rows failed and why.
+
+### Fixing issue #8 (RBAC frontend route guard)
+
+Decode the JWT on the frontend (never trust client-side role for data access — backend still validates). Store role in a React context. Wrap every dashboard route in a `<ProtectedRoute allowedRoles={['student']} />` component that redirects to `/login` if the role doesn't match. The backend validates the JWT on every API call independently.
+
+### Fixing issue #4 (Gemini on every teacher login)
+
+On login, call `GET /teacher/summary`. That route:
+1. Counts current feedback docs for this teacher.
+2. Compares to `ai_summaries.feedbackCount`.
+3. If equal → return `summary.text` immediately.
+4. If different → call Gemini, upsert `ai_summaries`, return new text.
+
+Response time drops from 3-8s to ~50ms for most logins.
+
+### Frontend component structure
+
+```
+src/
+  components/
+    auth/         LoginForm, ProtectedRoute
+    student/      Dashboard, TeacherCard, FeedbackForm, FeedbackBadge
+    teacher/      Dashboard, RatingChart, SummaryPanel, AIChat
+    admin/        Dashboard, TeacherRankingTable, ReportButton, RankChart
+    setup/        DeptForm, SemesterForm, TeacherForm, StudentForm, CSVUpload
+  hooks/
+    useAuth.ts    JWT decode, role, logout
+    useFeedback.ts  submit, edit, status check
+    useTeacherSummary.ts  cached fetch
+  api/
+    client.ts     Axios instance with JWT interceptor + 401 refresh
+```
+
+All charts use Recharts. `RatingChart` shows a bar chart of 1-10 distribution. `RankChart` on admin shows a sorted bar chart of average ratings across all teachers. Both are fully responsive via Recharts' `ResponsiveContainer`.

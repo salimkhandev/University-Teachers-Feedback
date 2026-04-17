@@ -89,10 +89,10 @@ export default function StudentTracking() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {students.map(s => (
-          <div key={s.id} className="card flex flex-col justify-between hover:border-gray-700 transition-colors">
+          <div key={s.id} className="card flex flex-col justify-between hover:border-indigo-500/50 transition-colors">
              <div>
                <div className="flex justify-between items-start mb-2">
-                 <h3 className="font-semibold text-white tracking-tight">{s.name}</h3>
+                 <h3 className="font-semibold text-primary tracking-tight">{s.name}</h3>
                  {s.status === 'Pending' ? (
                     <span className="bg-red-500/10 text-red-400 text-xs px-2 py-0.5 rounded-full border border-red-500/20 font-medium whitespace-nowrap">Pending</span>
                  ) : (
@@ -100,25 +100,20 @@ export default function StudentTracking() {
                  )}
                </div>
                
-               <p className="text-gray-400 text-xs mb-4">{s.email || 'No email'}</p>
+               <p className="text-secondary text-xs mb-4">{s.email || 'No email'}</p>
                
                <div className="space-y-3">
                  <div className="flex justify-between items-center text-sm">
-                   <span className="text-gray-500">Roll No</span>
-                   <span className="text-gray-300 font-mono text-xs bg-gray-800 px-2 py-1 rounded border border-gray-700/50">{s.rollNumber}</span>
+                   <span className="text-secondary">Roll No</span>
+                   <span className="text-primary font-mono text-xs bg-gray-500/10 px-2 py-1 rounded border border-base">{s.rollNumber}</span>
                  </div>
                  
-                 <div className="flex justify-between items-center text-sm">
-                   <span className="text-gray-500">Location</span>
-                   <span className="text-gray-300 flex items-center gap-1.5"><span className="text-xs text-brand-400 font-medium">{s.semesterName}</span> • <span>{s.sectionName}</span></span>
-                 </div>
-                 
-                 <div className="mt-4 pt-4 border-t border-gray-800/80">
+                 <div className="mt-4 pt-4 border-t border-base">
                     <div className="flex justify-between items-center mb-1.5">
-                      <span className="text-xs text-gray-500 font-medium">Feedback Progress</span>
-                      <span className="text-xs text-gray-300 font-medium">{s.submittedCount} / {s.totalAssigned}</span>
+                      <span className="text-xs text-secondary font-medium">Feedback Progress</span>
+                      <span className="text-xs text-primary font-medium">{s.submittedCount} / {s.totalAssigned}</span>
                     </div>
-                    <div className="h-1.5 w-full bg-gray-800 rounded-full overflow-hidden">
+                    <div className="h-1.5 w-full bg-gray-500/10 rounded-full overflow-hidden">
                        <div className={`h-full ${s.status === 'Completed' ? 'bg-emerald-400' : 'bg-brand-500'}`} style={{ width: `${s.totalAssigned > 0 ? (s.submittedCount / s.totalAssigned) * 100 : 0}%` }}></div>
                     </div>
                  </div>
@@ -140,9 +135,9 @@ export default function StudentTracking() {
       )}
 
       {!loading && students.length === 0 && activeDeptId && (
-        <div className="text-center py-16 card border border-dashed border-gray-700/50 flex flex-col items-center justify-center gap-3">
-           <svg className="w-12 h-12 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
-           <div className="text-gray-400 font-medium">No students found assigned to this department.</div>
+        <div className="text-center py-16 card border border-dashed border-base flex flex-col items-center justify-center gap-3">
+           <svg className="w-12 h-12 text-secondary opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+           <div className="text-secondary font-medium">No students found assigned to this department.</div>
         </div>
       )}
 
@@ -151,7 +146,7 @@ export default function StudentTracking() {
            <button 
              onClick={handleNextPage} 
              disabled={loading}
-             className="px-6 py-2.5 bg-gray-800 hover:bg-gray-700 text-white rounded-xl font-medium shadow-sm hover:shadow transition-all border border-gray-700 disabled:opacity-50 flex items-center gap-2 cursor-pointer"
+             className="px-6 py-2.5 bg-gray-500/10 hover:bg-gray-500/20 text-primary rounded-xl font-medium shadow-sm hover:shadow transition-all border border-base disabled:opacity-50 flex items-center gap-2 cursor-pointer"
            >
              {loading ? 'Fetching...' : `Load Next 50 (${students.length} / ${total})`}
            </button>

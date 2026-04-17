@@ -45,57 +45,81 @@ export default function PendingStudents() {
 
   return (
     <div className="card h-full flex flex-col">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="font-semibold text-white">System-Wide Pending Students</h3>
-        <button onClick={loadGlobalPending} disabled={pendingLoading} className="text-xs text-gray-400 hover:text-white transition-colors">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2">
+        <h3 className="font-semibold text-primary text-sm sm:text-base">System-Wide Pending Students</h3>
+        <button onClick={loadGlobalPending} disabled={pendingLoading} className="text-xs text-secondary hover:opacity-80 transition-colors">
           {pendingLoading ? '↻ Refreshing...' : '↻ Refresh'}
         </button>
       </div>
 
       {pendingLoading ? (
-        <div className="text-center py-16 text-gray-400 flex-1">Loading system data...</div>
+        <div className="text-center py-16 text-secondary flex-1">Loading system data...</div>
       ) : globalPending.length === 0 ? (
         <div className="text-center py-16 text-brand-400 flex-1 flex flex-col items-center justify-center">
           <span className="text-4xl mb-4">🎉</span>
-          <span className="text-lg">All clear! No students owe feedback.</span>
+          <span className="text-lg text-primary">All clear! No students owe feedback.</span>
         </div>
       ) : (
-        <div className="table-wrap">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-gray-800 text-left">
-                <th className="pb-3 text-gray-400 font-medium">Student Info</th>
-                <th className="pb-3 text-gray-400 font-medium">Placement (Dept / Sem / Section)</th>
-                <th className="pb-3 text-gray-400 font-medium">Missing Feedbacks</th>
-                <th className="pb-3 text-gray-400 font-medium text-right">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-800">
-              {globalPending.map((s, idx) => (
-                <tr key={`${s.id}-${idx}`} className="hover:bg-gray-800/20">
-                  <td className="py-3">
-                    <div className="font-medium text-white">{s.name}</div>
-                    <div className="text-xs text-gray-500">@{s.username}</div>
-                  </td>
-                  <td className="py-3 text-gray-400">
-                    <span className="text-gray-300">{s.department}</span> &gt; {s.semester} &gt; {s.section}
-                  </td>
-                  <td className="py-3">
-                    <div className="text-red-400 font-medium whitespace-nowrap">
-                      {s.totalAssigned - s.submittedCount} Pending
-                    </div>
-                    <div className="text-xs text-gray-500 max-w-xs truncate" title={s.missingTeacherNames.join(', ')}>
-                      ({s.missingTeacherNames.join(', ')})
-                    </div>
-                  </td>
-                  <td className="py-3 text-right">
-                    {renderReminderButton(s.email, s.name, s.missingTeacherNames)}
-                  </td>
+        <>
+          <div className="table-wrap hidden md:block">
+            <table className="w-full text-sm min-w-[760px]">
+              <thead>
+                <tr className="border-b border-base text-left">
+                  <th className="pb-3 text-secondary font-medium">Student Info</th>
+                  <th className="pb-3 text-secondary font-medium">Placement (Dept / Sem / Section)</th>
+                  <th className="pb-3 text-secondary font-medium">Missing Feedbacks</th>
+                  <th className="pb-3 text-secondary font-medium text-right">Action</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y border-base">
+                {globalPending.map((s, idx) => (
+                  <tr key={`${s.id}-${idx}`} className="hover:bg-gray-500/5">
+                    <td className="py-3">
+                      <div className="font-medium text-primary">{s.name}</div>
+                      <div className="text-xs text-secondary">@{s.username}</div>
+                    </td>
+                    <td className="py-3 text-secondary">
+                      <span className="text-primary font-medium">{s.department}</span> &gt; {s.semester} &gt; {s.section}
+                    </td>
+                    <td className="py-3">
+                      <div className="text-red-500 font-medium whitespace-nowrap">
+                        {s.totalAssigned - s.submittedCount} Pending
+                      </div>
+                      <div className="text-xs text-secondary max-w-xs truncate" title={s.missingTeacherNames.join(', ')}>
+                        ({s.missingTeacherNames.join(', ')})
+                      </div>
+                    </td>
+                    <td className="py-3 text-right">
+                      {renderReminderButton(s.email, s.name, s.missingTeacherNames)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="md:hidden space-y-3">
+            {globalPending.map((s, idx) => (
+              <div key={`${s.id}-${idx}`} className="rounded-lg border border-base bg-gray-500/5 p-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <p className="font-medium text-primary">{s.name}</p>
+                    <p className="text-xs text-secondary">@{s.username}</p>
+                  </div>
+                  <span className="text-xs text-red-500 font-medium whitespace-nowrap">
+                    {s.totalAssigned - s.submittedCount} Pending
+                  </span>
+                </div>
+                <p className="mt-2 text-xs text-secondary">
+                  <span className="text-primary font-medium">{s.department}</span> &gt; {s.semester} &gt; {s.section}
+                </p>
+                <p className="mt-1 text-xs text-secondary truncate" title={s.missingTeacherNames.join(', ')}>
+                  Missing: {s.missingTeacherNames.join(', ')}
+                </p>
+                <div className="mt-3">{renderReminderButton(s.email, s.name, s.missingTeacherNames)}</div>
+              </div>
+            ))}
+          </div>
+        </>
       )}
     </div>
   );

@@ -4,21 +4,60 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --bg-page: #f9fafb; /* gray-50 */
+    --bg-card: #ffffff;
+    --bg-nav: rgba(255, 255, 255, 0.9);
+    --text-primary: #111827; /* gray-900 */
+    --text-secondary: #4b5563; /* gray-600 */
+    --border-color: #e5e7eb; /* gray-200 */
+    --input-bg: #f3f4f6; /* gray-100 */
+    --tab-inactive-text: #6b7280; /* gray-500 */
+    --tab-inactive-bg: transparent;
+    --tab-hover-bg: #f3f4f6;
+  }
+
+  .dark {
+    --bg-page: #030712; /* gray-950 */
+    --bg-card: #111827; /* gray-900 */
+    --bg-nav: rgba(17, 24, 39, 0.9);
+    --text-primary: #f3f4f6; /* gray-100 */
+    --text-secondary: #9ca3af; /* gray-400 */
+    --border-color: #1f2937; /* gray-800 */
+    --input-bg: #1f2937; /* gray-800 */
+    --tab-inactive-text: #9ca3af; /* gray-400 */
+    --tab-hover-bg: #1f2937;
+  }
+
   *, *::before, *::after { box-sizing: border-box; }
   html { scroll-behavior: smooth; }
+  #root { min-height: 100vh; }
   body {
-    @apply bg-gray-950 text-gray-100 antialiased;
+    background-color: var(--bg-page);
+    color: var(--text-primary);
+    @apply antialiased transition-colors duration-200;
     font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  img, svg, video, canvas {
+    max-width: 100%;
+    height: auto;
   }
 }
 
 @layer components {
   /* ── Cards ────────────────────────── */
   .card {
-    @apply bg-gray-900 border border-gray-800 rounded-2xl p-4 sm:p-6 shadow-xl;
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    @apply rounded-2xl p-4 sm:p-6 shadow-sm transition-colors duration-200;
   }
 
-  /* ── Buttons — no active: inside @apply in Tailwind v3, use CSS instead */
+  .dark .card {
+    @apply shadow-xl;
+  }
+
+  /* ── Buttons ──────────────────────── */
   .btn-primary {
     @apply inline-flex items-center justify-center gap-2
            bg-indigo-600 hover:bg-indigo-700
@@ -27,38 +66,63 @@
            disabled:opacity-50 disabled:cursor-not-allowed;
   }
   .btn-secondary {
+    background-color: var(--input-bg);
+    color: var(--text-primary);
     @apply inline-flex items-center justify-center gap-2
-           bg-gray-800 hover:bg-gray-700
-           text-gray-200 font-medium px-4 py-2.5 rounded-xl
+           hover:opacity-80
+           font-medium px-4 py-2.5 rounded-xl
            transition-all duration-200 text-sm
            disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   /* ── Inputs ───────────────────────── */
   .input {
-    @apply bg-gray-800 border border-gray-700 text-gray-100 rounded-xl
-           px-4 py-2.5 w-full text-sm
+    background-color: var(--input-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    @apply rounded-xl px-4 py-2.5 w-full text-sm
            focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent
-           placeholder-gray-500 transition-all duration-200;
+           transition-all duration-200;
+  }
+  .input::placeholder {
+    color: var(--tab-inactive-text);
   }
 
   /* ── Tabs ─────────────────────────── */
   .tab          { @apply px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl font-medium transition-all duration-200 text-xs sm:text-sm cursor-pointer whitespace-nowrap; }
   .tab-active   { @apply bg-indigo-600 text-white shadow-lg; }
-  .tab-inactive { @apply text-gray-400 hover:text-gray-200 hover:bg-gray-800; }
+  .tab-inactive { 
+    color: var(--tab-inactive-text);
+    @apply hover:bg-opacity-10;
+  }
+  .tab-inactive:hover {
+     background-color: var(--tab-hover-bg);
+     color: var(--text-primary);
+  }
 
   /* ── Badges ───────────────────────── */
-  .badge-green  { @apply bg-emerald-900/60 text-emerald-400 text-xs font-semibold px-2.5 py-1 rounded-full border border-emerald-800/40; }
-  .badge-gray   { @apply bg-gray-800      text-gray-400    text-xs font-semibold px-2.5 py-1 rounded-full border border-gray-700/40; }
-  .badge-gold   { @apply bg-yellow-900/60 text-yellow-400  text-xs font-bold px-2.5 py-1 rounded-full border border-yellow-800/40; }
-  .badge-silver { @apply bg-gray-700/60   text-gray-300    text-xs font-bold px-2.5 py-1 rounded-full border border-gray-600/40; }
-  .badge-bronze { @apply bg-orange-900/60 text-orange-400  text-xs font-bold px-2.5 py-1 rounded-full border border-orange-800/40; }
+  .badge-green  { @apply bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-semibold px-2.5 py-1 rounded-full border border-emerald-500/20; }
+  .badge-gray   { @apply bg-gray-500/10    text-gray-600    dark:text-gray-400    text-xs font-semibold px-2.5 py-1 rounded-full border border-gray-500/20; }
+  .badge-gold   { @apply bg-yellow-500/10  text-yellow-600  dark:text-yellow-400  text-xs font-bold px-2.5 py-1 rounded-full border border-yellow-500/20; }
+  .badge-silver { @apply bg-gray-500/10    text-gray-500    dark:text-gray-300    text-xs font-bold px-2.5 py-1 rounded-full border border-gray-500/20; }
+  .badge-bronze { @apply bg-orange-500/10  text-orange-600  dark:text-orange-400  text-xs font-bold px-2.5 py-1 rounded-full border border-orange-500/20; }
 
   /* ── Table horizontal scroll ──────── */
-  .table-wrap { @apply overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0; }
+  .table-wrap { @apply overflow-x-auto -mx-3 sm:-mx-4 md:mx-0 px-3 sm:px-4 md:px-0; }
 
   /* ── Nav ──────────────────────────── */
-  .nav       { @apply border-b border-gray-800 bg-gray-900/90 backdrop-blur-sm sticky top-0 z-20; }
-  .nav-inner { @apply mx-auto px-4 h-14 sm:h-16 flex items-center justify-between max-w-6xl; }
-  .page-wrap { @apply max-w-6xl mx-auto px-4 py-6 sm:py-8; }
+  .nav       { 
+    border-bottom: 1px solid var(--border-color);
+    background-color: var(--bg-nav);
+    @apply backdrop-blur-sm sticky top-0 z-20 transition-colors duration-200; 
+  }
+  .nav-inner { @apply mx-auto px-3 sm:px-4 h-14 sm:h-16 flex items-center justify-between max-w-6xl; }
+  .page-wrap { @apply max-w-6xl mx-auto px-3 sm:px-4 py-5 sm:py-8; }
+
+  /* ── Utilities ────────────────────── */
+  .text-primary   { color: var(--text-primary); }
+  .text-secondary { color: var(--text-secondary); }
+  .bg-page        { background-color: var(--bg-page); }
+  .border-base    { border-color: var(--border-color); }
 }
+

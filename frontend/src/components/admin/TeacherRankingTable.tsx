@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import client from '../../api/client';
+import FormattedMessage from '../common/FormattedMessage';
 
 interface Props { rankings: any[] }
 
@@ -79,22 +80,22 @@ export default function TeacherRankingTable({ rankings }: Props) {
 
   return (
     <div className="card">
-      <h3 className="font-semibold text-white mb-4 text-sm sm:text-base">Teacher Rankings</h3>
+      <h3 className="font-semibold text-primary mb-4 text-sm sm:text-base">Teacher Rankings</h3>
       {rankings.length === 0 ? (
         <p className="text-gray-500 text-sm">No teacher data available.</p>
       ) : (
         <div className="table-wrap">
           <table className="w-full text-sm min-w-[320px]">
             <thead>
-              <tr className="border-b border-gray-800 text-left">
-                <th className="pb-3 text-gray-400 font-medium w-10">#</th>
-                <th className="pb-3 text-gray-400 font-medium">Teacher</th>
-                <th className="pb-3 text-gray-400 font-medium text-right">Avg</th>
-                <th className="pb-3 text-gray-400 font-medium text-right hidden sm:table-cell">Feedback</th>
+              <tr className="border-b border-base text-left">
+                <th className="pb-3 text-secondary font-medium w-10">#</th>
+                <th className="pb-3 text-secondary font-medium">Teacher</th>
+                <th className="pb-3 text-secondary font-medium text-right">Avg</th>
+                <th className="pb-3 text-secondary font-medium text-right hidden sm:table-cell">Feedback</th>
                 <th className="pb-3 w-10"></th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-800">
+            <tbody className="divide-y border-base">
               {rankings.map((r, i) => {
                 const history = chatHistories[r.teacherId] || [];
                 const isLoading = chatLoading[r.teacherId] || false;
@@ -107,11 +108,11 @@ export default function TeacherRankingTable({ rankings }: Props) {
                     <td className="py-3">
                       {i < 3
                         ? <span className={medals[i]}>{medalLabels[i]}</span>
-                        : <span className="text-gray-500 text-xs font-mono pl-1">#{i + 1}</span>}
+                        : <span className="text-secondary text-xs font-mono pl-1">#{i + 1}</span>}
                     </td>
                     <td className="py-3">
-                      <div className="font-medium text-white text-xs sm:text-sm">{r.name}</div>
-                      {r.email && <div className="text-xs text-gray-500 hidden sm:block">{r.email}</div>}
+                      <div className="font-medium text-primary text-xs sm:text-sm">{r.name}</div>
+                      {r.email && <div className="text-xs text-secondary hidden sm:block">{r.email}</div>}
                     </td>
                     <td className="py-3 text-right">
                       <span className={`font-bold ${
@@ -121,9 +122,9 @@ export default function TeacherRankingTable({ rankings }: Props) {
                         {r.averageRating > 0 ? `${r.averageRating}/10` : '—'}
                       </span>
                     </td>
-                    <td className="py-3 text-right text-gray-400 hidden sm:table-cell">{r.totalFeedback}</td>
+                    <td className="py-3 text-right text-secondary hidden sm:table-cell">{r.totalFeedback}</td>
                     <td className="py-3 text-right pr-2">
-                       <span className={`text-xs transition-transform inline-block ${expanded === r.teacherId ? 'rotate-180' : ''}`}>
+                       <span className={`text-xs transition-transform inline-block text-secondary ${expanded === r.teacherId ? 'rotate-180' : ''}`}>
                          ▼
                        </span>
                     </td>
@@ -131,21 +132,21 @@ export default function TeacherRankingTable({ rankings }: Props) {
                   
                   {expanded === r.teacherId && (
                     <tr>
-                      <td colSpan={5} className="py-4 px-4 bg-gray-900/50 rounded-lg">
+                      <td colSpan={5} className="py-4 px-4 bg-gray-500/5 rounded-lg border-x border-base">
                         <div className="text-xs font-semibold text-brand-400 uppercase tracking-widest mb-2 flex items-center gap-2">
                           <span className="w-2 h-2 rounded-full bg-brand-500 animate-pulse" />
                           AI Intelligence Report
                         </div>
                         {localSummaries[r.teacherId] ? (
                           <div className="flex flex-col gap-4">
-                            <div className="text-gray-300 text-sm leading-relaxed whitespace-pre-line border-l-2 border-brand-500/30 pl-4 py-1">
+                            <div className="text-secondary text-sm leading-relaxed whitespace-pre-line border-l-2 border-brand-500/30 pl-4 py-1">
                               {localSummaries[r.teacherId]}
                             </div>
                             
                             {/* Intelligent Chat Section */}
-                            <div className="bg-gray-800/20 rounded-md p-4 border border-gray-800">
-                              <div className="flex items-center justify-between mb-4">
-                                <h4 className="text-xs font-semibold text-gray-300 flex items-center gap-2">
+                            <div className="bg-gray-500/5 rounded-md p-3 sm:p-4 border border-base">
+                              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2">
+                                <h4 className="text-xs font-semibold text-primary flex items-center gap-2">
                                   <span className="text-brand-400 text-base">✨</span> Ask AI about this feedback
                                 </h4>
                                 {history.length > 0 && (
@@ -158,35 +159,38 @@ export default function TeacherRankingTable({ rankings }: Props) {
                                 )}
                               </div>
                               
-                              <div className="space-y-4 mb-4 max-h-[350px] overflow-y-auto pr-2 custom-scrollbar flex flex-col">
+                              <div className="space-y-2 mb-2 max-h-[250px] overflow-y-auto pr-1 custom-scrollbar flex flex-col">
                                 {history.length === 0 ? (
-                                  <div className="flex flex-col gap-2 my-2">
-                                    <span className="text-xs text-gray-500 mb-1">Suggested questions:</span>
-                                    {['What are the core strengths mentioned?', 'List the top 3 areas for improvement.', 'Summarize student sentiment in one sentence.'].map(suggestion => (
+                                  <div className="flex gap-1 overflow-x-auto pb-0.5 scrollbar-none">
+                                    {[
+                                      { label: 'Key strengths?', value: 'What are the core strengths mentioned?' },
+                                      { label: 'Top 3 improvements?', value: 'List the top 3 areas for improvement.' },
+                                      { label: '1-line sentiment?', value: 'Summarize student sentiment in one sentence.' },
+                                    ].map((suggestion) => (
                                       <button 
-                                        key={suggestion}
+                                        key={suggestion.value}
                                         onClick={() => {
-                                          setChatInputs(prev => ({ ...prev, [r.teacherId]: suggestion }));
+                                          setChatInputs(prev => ({ ...prev, [r.teacherId]: suggestion.value }));
                                           // Note: React state is async, so we manually trigger it or let the user click send
                                         }}
-                                        className="text-left text-sm bg-gray-800/50 hover:bg-gray-700 hover:text-white border border-gray-700/50 text-gray-300 py-2 px-3 rounded-xl transition-all"
+                                        className="shrink-0 text-[10px] sm:text-[11px] bg-gray-500/5 hover:bg-gray-500/10 hover:text-primary border border-base text-secondary py-0.5 px-1.5 rounded-full transition-all whitespace-nowrap"
                                       >
-                                        {suggestion}
+                                        {suggestion.label}
                                       </button>
                                     ))}
                                   </div>
                                 ) : (
                                   history.map((msg, idx) => (
                                     <div key={idx} className={`text-sm flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                                      <div className={`px-4 py-2.5 rounded-2xl max-w-[90%] md:max-w-[80%] shadow-md whitespace-pre-wrap leading-relaxed ${msg.role === 'user' ? 'bg-brand-600 text-white rounded-br-sm' : 'bg-gray-800 text-gray-200 rounded-bl-sm border border-gray-700/60'}`}>
-                                        {msg.content}
+                                      <div className={`px-3 sm:px-4 py-2.5 rounded-2xl max-w-[92%] sm:max-w-[90%] md:max-w-[80%] shadow-md whitespace-pre-wrap leading-relaxed break-words ${msg.role === 'user' ? 'bg-brand-600 text-white rounded-br-sm' : 'bg-gray-500/10 text-primary rounded-bl-sm border border-base'}`}>
+                                        {msg.role === 'model' ? <FormattedMessage content={msg.content} /> : msg.content}
                                       </div>
                                     </div>
                                   ))
                                 )}
                                 {isLoading && (
                                   <div className="text-sm flex justify-start">
-                                    <div className="px-4 py-3 rounded-2xl max-w-[85%] bg-gray-800 text-gray-400 rounded-bl-sm border border-gray-700/60 flex items-center gap-2 w-16 h-10 shadow-md">
+                                    <div className="px-4 py-3 rounded-2xl max-w-[85%] bg-gray-500/10 text-secondary rounded-bl-sm border border-base flex items-center gap-2 w-16 h-10 shadow-md">
                                       <span className="w-1.5 h-1.5 bg-brand-400/80 rounded-full animate-bounce" />
                                       <span className="w-1.5 h-1.5 bg-brand-400/80 rounded-full animate-bounce [animation-delay:-0.15s]" />
                                       <span className="w-1.5 h-1.5 bg-brand-400/80 rounded-full animate-bounce [animation-delay:-0.3s]" />
@@ -196,19 +200,19 @@ export default function TeacherRankingTable({ rankings }: Props) {
                                 <div ref={chatEndRef} />
                               </div>
                               
-                              <div className="flex gap-2 relative">
+                              <div className="flex flex-col sm:flex-row gap-2">
                                 <input 
                                   type="text" 
                                   maxLength={600}
                                   placeholder="E.g. What specific topics do students say they struggle with?" 
-                                  className="input flex-1 py-2.5 pr-20 text-sm md:text-base !bg-gray-900 border-gray-700 focus:!bg-gray-800 focus:border-brand-500 shadow-inner rounded-xl"
+                                  className="input flex-1 py-2.5 text-sm md:text-base border-base focus:border-brand-500 shadow-inner rounded-xl"
                                   value={chatInputs[r.teacherId] || ''}
                                   onChange={(e) => setChatInputs(prev => ({ ...prev, [r.teacherId]: e.target.value }))}
                                   onKeyDown={(e) => e.key === 'Enter' && handleChatSend(r.teacherId)}
                                   disabled={isLoading}
                                 />
                                 <button 
-                                  className="absolute right-1 top-1 bottom-1 btn-primary py-1 px-4 text-sm rounded-lg shadow-sm" 
+                                  className="btn-primary py-2 px-4 text-sm rounded-lg shadow-sm sm:w-auto w-full" 
                                   onClick={() => handleChatSend(r.teacherId)}
                                   disabled={isLoading || !chatInputs[r.teacherId]?.trim()}
                                 >
@@ -219,7 +223,7 @@ export default function TeacherRankingTable({ rankings }: Props) {
                           </div>
                         ) : (
                           <div className="py-2">
-                            <p className="text-gray-500 italic text-sm mb-3">No summary generated yet.</p>
+                            <p className="text-secondary italic text-sm mb-3">No summary generated yet.</p>
                             <button 
                                onClick={(e) => handleGenerate(e, r.teacherId)}
                                disabled={generatingId === r.teacherId}

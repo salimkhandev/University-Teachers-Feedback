@@ -27,7 +27,7 @@ export default function SummaryPanel() {
   return (
     <div className="card">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="font-semibold text-white">AI Summary</h3>
+        <h3 className="font-semibold text-primary">AI Summary</h3>
         <div className="flex items-center gap-2">
           {!loading && (
             <span className={cached ? 'badge-green' : 'badge-gray'}>
@@ -50,11 +50,11 @@ export default function SummaryPanel() {
         <p className="text-red-400">{error}</p>
       ) : (
         <>
-          <div className="prose prose-invert text-gray-300 text-sm leading-relaxed whitespace-pre-wrap">
+          <div className="prose dark:prose-invert text-primary text-sm leading-relaxed whitespace-pre-wrap">
             {summary}
           </div>
           {generatedAt && (
-            <p className="text-xs text-gray-600 mt-4">Generated: {generatedAt}</p>
+            <p className="text-xs text-secondary mt-4">Generated: {generatedAt}</p>
           )}
         </>
       )}

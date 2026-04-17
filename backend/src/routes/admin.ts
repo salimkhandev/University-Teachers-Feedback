@@ -7,11 +7,32 @@ import Feedback         from '../models/Feedback';
 import Student          from '../models/Student';
 import Semester         from '../models/Semester';
 import Section          from '../models/Section';
+import AISettings       from '../models/AISettings';
 import { generateAndCacheSummary } from '../services/summary';
 import { chatWithAdmin, summarizeChatHistory } from '../services/gemini';
+import { hashPassword } from '../utils/hash';
 
 const router = Router();
 router.use(authenticate, requireRole('admin'));
+
+const AI_MODELS = ['gemini-2.5-flash', 'gemini-2.5-flash-lite'] as const;
+
+const maskKey = (key: string): string => {
+  if (!key) return '';
+  if (key.length <= 8) return '****';
+  return `${key.slice(0, 4)}...${key.slice(-4)}`;
+};
+
+const ensureAISettings = async () => {
+  let settings = await AISettings.findOne();
+  if (!settings) {
+    settings = await AISettings.create({
+      selectedModel: 'gemini-2.5-flash-lite',
+      keys: [],
+    });
+  }
+  return settings;
+};
 
 // GET /api/admin/teachers/rankings
 router.get('/teachers/rankings', async (req: Request, res: Response): Promise<void> => {
@@ -219,6 +240,130 @@ router.get('/report/status', async (req: Request, res: Response): Promise<void> 
   }
 });
 
+// GET /api/admin/ai/settings
+router.get('/ai/settings', async (_req: Request, res: Response): Promise<void> => {
+  try {
+    const settings = await ensureAISettings();
+    res.json({
+      selectedModel: settings.selectedModel,
+      availableModels: AI_MODELS,
+      keys: settings.keys.map((k: any) => ({
+        id: k._id,
+        label: k.label,
+        maskedKey: maskKey(k.apiKey),
+        isActive: k.isActive,
+        lastUsedAt: k.lastUsedAt || null,
+        lastFailedAt: k.lastFailedAt || null,
+        lastError: k.lastError || '',
+      })),
+    });
+  } catch (err) {
+    console.error('[admin/ai/settings GET]', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// PATCH /api/admin/ai/settings/model
+router.patch('/ai/settings/model', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { model } = req.body;
+    if (!AI_MODELS.includes(model)) {
+      res.status(400).json({ error: 'Invalid model selection.' });
+      return;
+    }
+
+    const settings = await ensureAISettings();
+    settings.selectedModel = model;
+    await settings.save();
+    res.json({ message: 'Model updated.', selectedModel: settings.selectedModel });
+  } catch (err) {
+    console.error('[admin/ai/settings/model PATCH]', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// POST /api/admin/ai/settings/keys
+router.post('/ai/settings/keys', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { label, apiKey } = req.body;
+    if (!label || !apiKey) {
+      res.status(400).json({ error: 'Both label and apiKey are required.' });
+      return;
+    }
+
+    const settings = await ensureAISettings();
+    settings.keys.push({ label: String(label).trim(), apiKey: String(apiKey).trim(), isActive: true } as any);
+    await settings.save();
+    res.json({ message: 'API key added successfully.' });
+  } catch (err) {
+    console.error('[admin/ai/settings/keys POST]', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// PUT /api/admin/ai/settings/keys/:keyId (renew/update key)
+router.put('/ai/settings/keys/:keyId', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { keyId } = req.params;
+    const { label, apiKey, isActive } = req.body;
+    const settings = await ensureAISettings();
+    const keyDoc: any = (settings as any).keys.id(keyId);
+    if (!keyDoc) {
+      res.status(404).json({ error: 'Key not found.' });
+      return;
+    }
+
+    if (typeof label === 'string' && label.trim()) keyDoc.label = label.trim();
+    if (typeof apiKey === 'string' && apiKey.trim()) keyDoc.apiKey = apiKey.trim();
+    if (typeof isActive === 'boolean') keyDoc.isActive = isActive;
+    keyDoc.lastError = '';
+    keyDoc.lastFailedAt = undefined;
+    await settings.save();
+    res.json({ message: 'API key updated.' });
+  } catch (err) {
+    console.error('[admin/ai/settings/keys PUT]', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// PATCH /api/admin/ai/settings/keys/:keyId/toggle
+router.patch('/ai/settings/keys/:keyId/toggle', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { keyId } = req.params;
+    const settings = await ensureAISettings();
+    const keyDoc: any = (settings as any).keys.id(keyId);
+    if (!keyDoc) {
+      res.status(404).json({ error: 'Key not found.' });
+      return;
+    }
+    keyDoc.isActive = !keyDoc.isActive;
+    await settings.save();
+    res.json({ message: 'Key status updated.', isActive: keyDoc.isActive });
+  } catch (err) {
+    console.error('[admin/ai/settings/keys/toggle PATCH]', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// DELETE /api/admin/ai/settings/keys/:keyId
+router.delete('/ai/settings/keys/:keyId', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { keyId } = req.params;
+    const settings = await ensureAISettings();
+    const keyDoc: any = (settings as any).keys.id(keyId);
+    if (!keyDoc) {
+      res.status(404).json({ error: 'Key not found.' });
+      return;
+    }
+    keyDoc.deleteOne();
+    await settings.save();
+    res.json({ message: 'Key deleted.' });
+  } catch (err) {
+    console.error('[admin/ai/settings/keys DELETE]', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // POST /api/admin/report/chat/:teacherId — chat with AI about a teacher
 router.post('/report/chat/:teacherId', async (req: Request, res: Response): Promise<void> => {
   const teacherId = String(req.params.teacherId);
@@ -260,7 +405,7 @@ router.post('/report/chat/:teacherId', async (req: Request, res: Response): Prom
       compactedHistory = recentHistory;
     } else {
       // Fallback token-window truncation out of safety
-      recentHistory = recentHistory.slice(-10);
+      recentHistory = recentHistory.slice(-5);
     }
 
     // 4. Send to Gemini using the dense/recent history + the new dedicated Admin context function
@@ -347,6 +492,116 @@ router.get('/student-tracking/department/:departmentId', async (req: Request, re
     });
   } catch (err) {
     console.error('[admin/student-tracking/department]', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// GET /api/admin/users
+router.get('/users', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { role } = req.query; // 'student' or 'teacher' or skip for all
+    const filter: any = {};
+    if (role) filter.role = role;
+    
+    const users = await User.find(filter).select('-password').sort({ createdAt: -1 });
+    
+    // For students, let's also fetch their Student profiles to attach roll number / section info
+    const students = await Student.find().populate('sectionId', 'name').lean();
+    const studentsMap = new Map();
+    students.forEach(s => {
+      studentsMap.set(String(s.userId), s);
+    });
+
+    const enrichedUsers = users.map(u => {
+      const uObj: any = u.toObject();
+      if (u.role === 'student') {
+        const studentProfile = studentsMap.get(String(u._id));
+        if (studentProfile) {
+          uObj.rollNumber = studentProfile.rollNumber;
+          uObj.sectionName = (studentProfile.sectionId as any)?.name;
+          uObj.studentId = studentProfile._id;
+        }
+      }
+      return uObj;
+    });
+
+    res.json(enrichedUsers);
+  } catch (err) {
+    console.error('[admin/users/get]', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// PUT /api/admin/users/:id
+router.put('/users/:id', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { name, email, rollNumber, username } = req.body;
+
+    const user = await User.findById(id);
+    if (!user) { res.status(404).json({ error: 'User not found' }); return; }
+
+    if (name) user.name = name;
+    if (email) user.email = email;
+    if (username) user.username = username;
+    await user.save();
+
+    if (user.role === 'student' && rollNumber) {
+      await Student.updateOne({ userId: user._id }, { rollNumber });
+    }
+
+    res.json({ message: 'User updated successfully' });
+  } catch (err) {
+    console.error('[admin/users/put]', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// PUT /api/admin/users/:id/password
+router.put('/users/:id/password', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { password } = req.body;
+    if (!password) { res.status(400).json({ error: 'Password is required' }); return; }
+
+    const user = await User.findById(id);
+    if (!user) { res.status(404).json({ error: 'User not found' }); return; }
+
+    user.password = await hashPassword(password);
+    await user.save();
+
+    res.json({ message: 'Password updated successfully' });
+  } catch (err) {
+    console.error('[admin/users/password]', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// DELETE /api/admin/users/:id
+router.delete('/users/:id', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const user = await User.findById(id);
+    if (!user) { res.status(404).json({ error: 'User not found' }); return; }
+
+    if (user.role === 'student') {
+      const student = await Student.findOne({ userId: id });
+      if (student) {
+        await Feedback.deleteMany({ studentId: student._id });
+        await Student.deleteOne({ _id: student._id });
+      }
+    } else if (user.role === 'teacher') {
+      const assignments = await TeacherAssignment.find({ teacherId: id });
+      const assignmentIds = assignments.map(a => a._id);
+      await Feedback.deleteMany({ assignmentId: { $in: assignmentIds } });
+      await TeacherAssignment.deleteMany({ teacherId: id });
+    }
+
+    await User.deleteOne({ _id: id });
+    
+    res.json({ message: 'User and all related data deleted successfully' });
+  } catch (err) {
+    console.error('[admin/users/delete]', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

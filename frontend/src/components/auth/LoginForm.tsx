@@ -2,6 +2,7 @@ import { useState, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import client from '../../api/client';
+import ThemeToggle from '../common/ThemeToggle';
 
 export default function LoginForm() {
   const { login } = useAuth();
@@ -33,7 +34,10 @@ export default function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-950 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-page px-4 transition-colors duration-200">
+      <div className="fixed top-4 right-4 z-50">
+        <ThemeToggle />
+      </div>
       {/* Glow background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-brand-600/20 rounded-full blur-3xl" />
@@ -48,20 +52,20 @@ export default function LoginForm() {
                 d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
             </svg>
           </div>
-          <h1 className="text-3xl font-bold text-white">Student Feedback</h1>
-          <p className="text-gray-400 mt-1">AI-Powered University Platform</p>
+          <h1 className="text-3xl font-bold text-primary">Student Feedback</h1>
+          <p className="text-secondary mt-1">AI-Powered University Platform</p>
         </div>
 
         <div className="card">
-          <h2 className="text-lg font-semibold text-white mb-6">Sign in to your account</h2>
+          <h2 className="text-lg font-semibold text-primary mb-6">Sign in to your account</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1.5">Username</label>
+              <label className="block text-sm font-medium text-secondary mb-1.5">Username</label>
               <input id="username" type="text" value={username} onChange={e => setUsername(e.target.value)}
                 className="input" placeholder="Enter your username" required autoFocus />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1.5">Password</label>
+              <label className="block text-sm font-medium text-secondary mb-1.5">Password</label>
               <input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)}
                 className="input" placeholder="Enter your password" required />
             </div>
@@ -82,14 +86,14 @@ export default function LoginForm() {
             </button>
           </form>
 
-          <div className="mt-6 pt-5 border-t border-gray-800">
-            <p className="text-xs text-gray-500 text-center mb-3">Demo credentials</p>
+          <div className="mt-6 pt-5 border-t border-base">
+            <p className="text-xs text-secondary text-center mb-3">Demo credentials</p>
             <div className="grid grid-cols-3 gap-2 text-xs">
               {[['Admin','admin','admin123'],['Teacher','teacher1','pass123'],['Student','student1','pass123']].map(([role, u, p]) => (
                 <button key={role} onClick={() => { setUsername(u); setPassword(p); }}
-                  className="bg-gray-800 hover:bg-gray-700 rounded-lg p-2 text-center transition-colors">
-                  <div className="font-semibold text-gray-300">{role}</div>
-                  <div className="text-gray-500">{u}</div>
+                  className="bg-gray-500/5 hover:bg-gray-500/10 rounded-lg p-2 text-center transition-colors border border-base">
+                  <div className="font-semibold text-primary">{role}</div>
+                  <div className="text-secondary">{u}</div>
                 </button>
               ))}
             </div>

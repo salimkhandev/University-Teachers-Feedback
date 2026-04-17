@@ -6,11 +6,27 @@ import Feedback         from '../models/Feedback';
 import AISummary        from '../models/AISummary';
 import ChatSession      from '../models/ChatSession';
 import { generateAndCacheSummary } from '../services/summary';
-import { chatWithTeacher }         from '../services/gemini';
+import { chatWithTeacher, summarizeChatHistory } from '../services/gemini';
 import { Types }        from 'mongoose';
 
 const router = Router();
 router.use(authenticate, requireRole('teacher'));
+const summaryRetryAfterByTeacher = new Map<string, number>();
+const DEFAULT_SUMMARY_RETRY_MS = 60_000;
+
+const parseRetryDelayMs = (err: any): number => {
+  const retryInfo = Array.isArray(err?.errorDetails)
+    ? err.errorDetails.find((d: any) => String(d?.['@type'] || '').includes('RetryInfo'))
+    : null;
+  const retryDelay = String(retryInfo?.retryDelay || '').trim();
+  const match = retryDelay.match(/^(\d+)(ms|s|m)$/i);
+  if (!match) return DEFAULT_SUMMARY_RETRY_MS;
+  const value = Number(match[1]);
+  const unit = match[2].toLowerCase();
+  if (unit === 'ms') return value;
+  if (unit === 'm') return value * 60_000;
+  return value * 1_000;
+};
 
 // GET /api/teacher/me
 router.get('/me', async (req: Request, res: Response): Promise<void> => {
@@ -86,9 +102,42 @@ router.get('/summary', async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
+    const retryAfterTs = summaryRetryAfterByTeacher.get(teacherId) ?? 0;
+    if (Date.now() < retryAfterTs) {
+      const retryAfterSeconds = Math.ceil((retryAfterTs - Date.now()) / 1000);
+      const fallbackSummary = cached?.summaryText ?? 'Summary generation is temporarily paused due to AI quota. Please try again shortly.';
+      res.status(429).json({
+        error: `AI quota cooldown active. Retry in ${retryAfterSeconds}s.`,
+        retryAfterSeconds,
+        quotaLimited: true,
+        summary: fallbackSummary,
+        cached: Boolean(cached),
+        generatedAt: cached?.generatedAt ?? null,
+      });
+      return;
+    }
+
     const summary = await generateAndCacheSummary(teacherId);
     res.json({ summary, cached: false, generatedAt: new Date() });
-  } catch (err) {
+  } catch (err: any) {
+    if (err?.status === 429) {
+      const teacherId = req.user.id;
+      const cooldownMs = parseRetryDelayMs(err);
+      summaryRetryAfterByTeacher.set(teacherId, Date.now() + cooldownMs);
+
+      const cached = await AISummary.findOne({ teacherId: new Types.ObjectId(teacherId) });
+      const retryAfterSeconds = Math.ceil(cooldownMs / 1000);
+      const fallbackSummary = cached?.summaryText ?? 'Summary generation is currently rate-limited. Please try again after cooldown.';
+      res.status(429).json({
+        error: `AI quota exceeded. Retry in ${retryAfterSeconds}s.`,
+        retryAfterSeconds,
+        quotaLimited: true,
+        summary: fallbackSummary,
+        cached: Boolean(cached),
+        generatedAt: cached?.generatedAt ?? null,
+      });
+      return;
+    }
     console.error('[teacher/summary]', err);
     res.status(500).json({ error: 'Internal server error' });
   }
@@ -105,11 +154,40 @@ router.get('/chat', async (req: Request, res: Response): Promise<void> => {
   }
 });
 
+// GET /api/teacher/chat/bootstrap — single request for chat + cached summary (no AI generation)
+router.get('/chat/bootstrap', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const teacherId = req.user.id;
+
+    const session = await ChatSession.findOne({ teacherId });
+    const assignments = await TeacherAssignment.find({ teacherId }).select('_id');
+    const assignmentIds = assignments.map((a) => a._id);
+    const currentCount = await Feedback.countDocuments({ assignmentId: { $in: assignmentIds } });
+    const cached = await AISummary.findOne({ teacherId: new Types.ObjectId(teacherId) });
+
+    const fallbackSummary = currentCount === 0
+      ? 'No feedback has been submitted yet.'
+      : 'Summary is not generated yet. Open "AI Summary" or refresh there once to generate it.';
+
+    res.json({
+      messages: session?.messages ?? [],
+      summary: cached?.summaryText ?? fallbackSummary,
+      summaryCached: Boolean(cached),
+      summaryFresh: Boolean(cached && cached.feedbackCount === currentCount),
+      generatedAt: cached?.generatedAt ?? null,
+    });
+  } catch (err) {
+    console.error('[teacher/chat/bootstrap GET]', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // POST /api/teacher/chat — send message and get AI reply
 router.post('/chat', async (req: Request, res: Response): Promise<void> => {
   try {
     const { message } = req.body;
     if (!message) { res.status(400).json({ error: 'message is required' }); return; }
+    if (String(message).length > 1000) { res.status(400).json({ error: 'Message payload too large.' }); return; }
 
     // Load or create session
     let session = await ChatSession.findOne({ teacherId: req.user.id });
@@ -124,13 +202,40 @@ router.post('/chat', async (req: Request, res: Response): Promise<void> => {
     const avgRating = feedbacks.length
       ? (feedbacks.reduce((s, f) => s + f.rating, 0) / feedbacks.length).toFixed(2)
       : 'N/A';
-    const context = `Average rating: ${avgRating}/10. Total feedback: ${feedbacks.length}.`;
+
+    const validComments = feedbacks.map((f) => f.comment).filter(Boolean);
+    const commentsList = validComments.length > 0
+      ? validComments.map((c, i) => `${i + 1}. "${c}"`).join('\n')
+      : 'No comments provided by students.';
+
+    const context = `SYSTEM ROLE: You are a personal AI teaching coach talking to this exact teacher (the logged-in user). This conversation is from the teacher whose students submitted the feedback below.
+
+TEACHER FEEDBACK DATA:
+Average rating: ${avgRating}/10
+Total feedback: ${feedbacks.length}
+
+STUDENT COMMENTS:
+${commentsList}
+
+INSTRUCTION:
+Answer in teacher mode. Coach the teacher directly, suggest practical improvements, and keep responses concise and actionable.`;
 
     session.messages.push({ role: 'user', content: message, timestamp: new Date() });
 
-    // Call Gemini with existing history (exclude the message we just added)
-    const history = session.messages.slice(0, -1).map((m) => ({ role: m.role, content: m.content }));
-    const reply   = await chatWithTeacher(history, message, context);
+    // Build history and apply compaction/truncation for scalable context windows.
+    let recentHistory = session.messages
+      .slice(0, -1)
+      .map((m) => ({ role: m.role, content: m.content }));
+
+    const historyLength = recentHistory.reduce((acc, msg) => acc + (msg.content?.length || 0), 0);
+    if (historyLength > 3000) {
+      const summaryText = await summarizeChatHistory(recentHistory);
+      recentHistory = [{ role: 'user', content: `[SYSTEM: PREVIOUS CHAT COMPACTED]\nWe previously established:\n${summaryText}` }];
+    } else {
+      recentHistory = recentHistory.slice(-5);
+    }
+
+    const reply = await chatWithTeacher(recentHistory, message, context);
 
     session.messages.push({ role: 'model', content: reply, timestamp: new Date() });
     await session.save();

@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import client from '../../api/client';
+import ThemeToggle from '../common/ThemeToggle';
 
 /**
  * Multi-step setup wizard: Dept → Semester → Section → Subject → Teacher → Assignment → Student → CSV
@@ -22,7 +23,7 @@ const STEPS: { key: Step; label: string }[] = [
 function Field({ label, id, type = 'text', value, onChange, disabled = false, placeholder = '' }: any) {
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-300 mb-1.5">{label}</label>
+      <label className="block text-sm font-medium text-secondary mb-1.5">{label}</label>
       <input id={id} type={type} value={value} onChange={e => onChange(e.target.value)}
         disabled={disabled} placeholder={placeholder} className="input" />
     </div>
@@ -32,7 +33,7 @@ function Field({ label, id, type = 'text', value, onChange, disabled = false, pl
 function SelectField({ label, id, value, onChange, options }: any) {
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-300 mb-1.5">{label}</label>
+      <label className="block text-sm font-medium text-secondary mb-1.5">{label}</label>
       <select id={id} value={value} onChange={e => onChange(e.target.value)}
         className="input">
         <option value="">— Select —</option>
@@ -140,8 +141,8 @@ export default function SetupWizard() {
               {loading ? 'Creating...' : 'Create Department'}
             </button>
             {depts.length > 0 && (
-              <div className="mt-4 p-4 rounded-xl border border-gray-800 bg-gray-900/30">
-                <p className="text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wide">Already Saved Departments:</p>
+              <div className="mt-4 p-4 rounded-xl border border-base bg-gray-500/5">
+                <p className="text-xs font-semibold text-secondary mb-2 uppercase tracking-wide">Already Saved Departments:</p>
                 <div className="flex flex-wrap gap-2">
                   {depts.map(d => <span key={d._id} className="px-2 py-1.5 bg-brand-500/10 text-brand-300 text-xs rounded-lg border border-brand-500/20 font-medium">{d.name} ({d.code})</span>)}
                 </div>
@@ -161,8 +162,8 @@ export default function SetupWizard() {
               {loading ? 'Creating...' : `Create ${f.number || 'N'} Semesters`}
             </button>
             {f.departmentId && semesters.length > 0 && (
-              <div className="mt-4 p-4 rounded-xl border border-gray-800 bg-gray-900/30">
-                <p className="text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wide">Already Saved Semesters:</p>
+              <div className="mt-4 p-4 rounded-xl border border-base bg-gray-500/5">
+                <p className="text-xs font-semibold text-secondary mb-2 uppercase tracking-wide">Already Saved Semesters:</p>
                 <div className="flex flex-wrap gap-2">
                   {semesters.map(s => <span key={s._id} className="px-2 py-1.5 bg-brand-500/10 text-brand-300 text-xs rounded-lg border border-brand-500/20 font-medium">{s.label ?? `Semester ${s.number}`}</span>)}
                 </div>
@@ -184,8 +185,8 @@ export default function SetupWizard() {
               {loading ? 'Creating...' : `Create ${f.count || 'N'} Sections`}
             </button>
             {f.semesterId && sections.length > 0 && (
-              <div className="mt-4 p-4 rounded-xl border border-gray-800 bg-gray-900/30">
-                <p className="text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wide">Already Saved Sections:</p>
+              <div className="mt-4 p-4 rounded-xl border border-base bg-gray-500/5">
+                <p className="text-xs font-semibold text-secondary mb-2 uppercase tracking-wide">Already Saved Sections:</p>
                 <div className="flex flex-wrap gap-2">
                   {sections.map(s => <span key={s._id} className="px-2 py-1.5 bg-brand-500/10 text-brand-300 text-xs rounded-lg border border-brand-500/20 font-medium">Section {s.name}</span>)}
                 </div>
@@ -204,19 +205,19 @@ export default function SetupWizard() {
               options={sections.map((s: any) => ({ value: s._id, label: `Section ${s.name}` }))} />
             
             <div className="space-y-3">
-              <label className="block text-sm font-medium text-gray-300">Subjects</label>
+              <label className="block text-sm font-medium text-secondary">Subjects</label>
               {subjectInputs.map((input, idx) => (
-                <div key={idx} className="flex gap-3 items-start">
+                <div key={idx} className="flex flex-col sm:flex-row gap-2 sm:gap-3 items-stretch sm:items-start">
                   <div className="flex-1">
                     <input className="input w-full" placeholder="Subject Name (e.g. Biology)" value={input.name} 
                       onChange={e => { const updated = [...subjectInputs]; updated[idx].name = e.target.value; setSubjectInputs(updated); }} />
                   </div>
-                  <div className="w-1/3">
+                  <div className="w-full sm:w-1/3">
                     <input className="input w-full" placeholder="Code (e.g. BIO)" value={input.code} 
                       onChange={e => { const updated = [...subjectInputs]; updated[idx].code = e.target.value; setSubjectInputs(updated); }} />
                   </div>
                   {subjectInputs.length > 1 && (
-                    <button className="p-2 text-red-500 hover:text-red-400 mt-1" onClick={() => setSubjectInputs(subjectInputs.filter((_, i) => i !== idx))}>✕</button>
+                    <button className="p-2 text-red-500 hover:text-red-400 mt-0 sm:mt-1 self-end sm:self-auto" onClick={() => setSubjectInputs(subjectInputs.filter((_, i) => i !== idx))}>✕</button>
                   )}
                 </div>
               ))}
@@ -236,8 +237,8 @@ export default function SetupWizard() {
               {loading ? 'Creating...' : `Create ${subjectInputs.length} Subject${subjectInputs.length > 1 ? 's' : ''}`}
             </button>
             {f.sectionId && subjects.length > 0 && (
-              <div className="mt-4 p-4 rounded-xl border border-gray-800 bg-gray-900/30">
-                <p className="text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wide">Already Saved Subjects:</p>
+              <div className="mt-4 p-4 rounded-xl border border-base bg-gray-500/5">
+                <p className="text-xs font-semibold text-secondary mb-2 uppercase tracking-wide">Already Saved Subjects:</p>
                 <div className="flex flex-wrap gap-2">
                   {subjects.map(s => <span key={s._id} className="px-2 py-1.5 bg-brand-500/10 text-brand-300 text-xs rounded-lg border border-brand-500/20 font-medium">{s.name} ({s.code})</span>)}
                 </div>
@@ -301,10 +302,10 @@ export default function SetupWizard() {
       case 'csv':
         return (
           <div className="space-y-4">
-            <p className="text-sm text-gray-400">
-              CSV columns: <code className="text-brand-400">name, username, password, sectionId, semesterId, email, cnic, phone</code>
+            <p className="text-sm text-secondary">
+              CSV columns: <code className="text-brand-600 dark:text-brand-400">name, username, password, sectionId, semesterId, email, cnic, phone</code>
             </p>
-            <div className="border-2 border-dashed border-gray-700 rounded-xl p-6 text-center">
+            <div className="border-2 border-dashed border-base rounded-xl p-6 text-center">
               <input id="csv-file-input" type="file" accept=".csv"
                 onChange={e => setCsvFile(e.target.files?.[0] ?? null)}
                 className="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-brand-600 file:text-white hover:file:bg-brand-700 cursor-pointer" />
@@ -319,12 +320,12 @@ export default function SetupWizard() {
                 {csvResult.conflicts.length > 0 && (
                   <div className="overflow-x-auto">
                     <table className="w-full text-xs">
-                      <thead><tr className="border-b border-gray-800 text-gray-400">
+                      <thead><tr className="border-b border-base text-secondary">
                         <th className="pb-2 text-left">Row</th><th className="pb-2 text-left">Reason</th>
                       </tr></thead>
-                      <tbody className="divide-y divide-gray-800">
+                      <tbody className="divide-y border-base">
                         {csvResult.conflicts.map((c: any, i: number) => (
-                          <tr key={i}><td className="py-1.5 text-gray-300">{c.row}</td><td className="py-1.5 text-red-400">{c.reason}</td></tr>
+                          <tr key={i}><td className="py-1.5 text-secondary">{c.row}</td><td className="py-1.5 text-red-500">{c.reason}</td></tr>
                         ))}
                       </tbody>
                     </table>
@@ -340,17 +341,21 @@ export default function SetupWizard() {
   const currentIndex = STEPS.findIndex(s => s.key === step);
 
   return (
-    <div className="min-h-screen bg-gray-950 p-6">
-      <div className="max-w-2xl mx-auto">
-        <h2 className="text-2xl font-bold text-white mb-6">System Setup</h2>
+    <div className="min-h-screen bg-page px-3 py-4 sm:p-6 transition-colors duration-200">
+      <div className="fixed top-3 right-3 sm:top-4 sm:right-4 z-50">
+        <ThemeToggle />
+      </div>
+      <div className="max-w-4xl mx-auto">
+        <h2 className="text-xl sm:text-2xl font-bold text-primary mb-5 sm:mb-6 pr-12">System Setup</h2>
 
         {/* Step indicator */}
-        <div className="flex flex-wrap gap-1.5 mb-6">
+        <div className="flex gap-1.5 mb-5 sm:mb-6 overflow-x-auto pb-1 scrollbar-none">
           {STEPS.map((s, i) => (
             <button key={s.key} onClick={() => { setStep(s.key); setMsg(null); }}
-              className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-colors ${
-                s.key === step ? 'bg-brand-600 text-white' :
-                i < currentIndex ? 'bg-gray-800 text-emerald-400' : 'bg-gray-800 text-gray-500'
+              className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-colors whitespace-nowrap shrink-0 ${
+                s.key === step ? 'bg-indigo-600 text-white shadow-md' :
+                i < currentIndex ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20' : 
+                'bg-gray-500/5 text-secondary border border-base'
               }`}>
               {i < currentIndex ? '✓ ' : ''}{s.label}
             </button>
@@ -358,7 +363,7 @@ export default function SetupWizard() {
         </div>
 
         <div className="card">
-          <h3 className="text-lg font-semibold text-white mb-5">{STEPS[currentIndex].label}</h3>
+          <h3 className="text-base sm:text-lg font-semibold text-primary mb-4 sm:mb-5">{STEPS[currentIndex].label}</h3>
           {msg && (
             <div className={`mb-4 text-sm px-4 py-3 rounded-xl ${
               msg.type === 'ok' ? 'bg-emerald-900/30 text-emerald-400 border border-emerald-800' :
@@ -368,10 +373,10 @@ export default function SetupWizard() {
           {renderStep()}
         </div>
 
-        <div className="flex justify-between mt-4">
-          <button className="btn-secondary text-sm" disabled={currentIndex === 0}
+        <div className="flex flex-col-reverse sm:flex-row gap-2 sm:justify-between mt-4">
+          <button className="btn-secondary text-sm w-full sm:w-auto" disabled={currentIndex === 0}
             onClick={() => { setStep(STEPS[currentIndex - 1].key); setMsg(null); }}>← Previous</button>
-          <button className="btn-secondary text-sm" disabled={currentIndex === STEPS.length - 1}
+          <button className="btn-secondary text-sm w-full sm:w-auto" disabled={currentIndex === STEPS.length - 1}
             onClick={() => { setStep(STEPS[currentIndex + 1].key); setMsg(null); }}>Next →</button>
         </div>
       </div>

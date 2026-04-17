@@ -1,11 +1,104 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { ENV } from '../config/env';
+import AISettings, { GeminiModelOption } from '../models/AISettings';
 
-const genAI = new GoogleGenerativeAI(ENV.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-lite' });
+type RuntimeKey = {
+  id?: string;
+  label: string;
+  apiKey: string;
+  source: 'db' | 'env';
+};
+
+const DEFAULT_MODEL: GeminiModelOption = 'gemini-2.5-flash-lite';
 
 const average = (nums: number[]): string =>
   nums.length ? (nums.reduce((a, b) => a + b, 0) / nums.length).toFixed(2) : '0';
+
+const getErrorMessage = (err: any): string =>
+  String(err?.message || err?.statusText || 'Unknown Gemini error').slice(0, 280);
+
+async function getRuntimeAIConfig(): Promise<{ model: GeminiModelOption; keys: RuntimeKey[] }> {
+  const settings = await AISettings.findOne().lean();
+  const selectedModel = (settings?.selectedModel as GeminiModelOption) || DEFAULT_MODEL;
+
+  const dbKeys: RuntimeKey[] = (settings?.keys || [])
+    .filter((k: any) => k.isActive && typeof k.apiKey === 'string' && k.apiKey.trim())
+    .map((k: any) => ({
+      id: String(k._id),
+      label: k.label || 'Configured key',
+      apiKey: String(k.apiKey).trim(),
+      source: 'db' as const,
+    }));
+
+  const keys = [...dbKeys];
+  if (ENV.GEMINI_API_KEY) {
+    keys.push({
+      label: 'ENV key',
+      apiKey: ENV.GEMINI_API_KEY,
+      source: 'env',
+    });
+  }
+
+  if (keys.length === 0) {
+    throw new Error('No Gemini API key configured. Add one in Admin > AI Settings.');
+  }
+
+  return { model: selectedModel, keys };
+}
+
+async function markKeySuccess(key: RuntimeKey) {
+  if (key.source !== 'db' || !key.id) return;
+  await AISettings.updateOne(
+    { 'keys._id': key.id },
+    {
+      $set: {
+        'keys.$.lastUsedAt': new Date(),
+        'keys.$.lastError': '',
+      },
+    }
+  );
+}
+
+async function markKeyFailure(key: RuntimeKey, errorMessage: string) {
+  if (key.source !== 'db' || !key.id) return;
+  await AISettings.updateOne(
+    { 'keys._id': key.id },
+    {
+      $set: {
+        'keys.$.lastFailedAt': new Date(),
+        'keys.$.lastError': errorMessage,
+      },
+    }
+  );
+}
+
+async function runWithGemini<T>(
+  systemInstruction: string | undefined,
+  runner: (model: any) => Promise<T>
+): Promise<T> {
+  const runtime = await getRuntimeAIConfig();
+  let lastErr: any = null;
+
+  for (const key of runtime.keys) {
+    try {
+      const genAI = new GoogleGenerativeAI(key.apiKey);
+      const model = genAI.getGenerativeModel({
+        model: runtime.model,
+        ...(systemInstruction ? { systemInstruction } : {}),
+      });
+      const result = await runner(model);
+      await markKeySuccess(key);
+      return result;
+    } catch (err: any) {
+      lastErr = err;
+      await markKeyFailure(key, getErrorMessage(err));
+      // Try next key if available (quota, auth, or transient error on current key).
+      continue;
+    }
+  }
+
+  throw lastErr || new Error('No Gemini key could complete this request.');
+}
 
 export async function generateTeacherSummary(
   comments: string[],
@@ -29,7 +122,7 @@ Be specific. Do not invent details not present in the comments.
   console.log(prompt);
 
   try {
-    const result = await model.generateContent(prompt);
+    const result = await runWithGemini(undefined, async (model) => model.generateContent(prompt));
     const responseText = result.response.text();
     console.log('--- GEMINI RESPONSE SUCCESS ---');
     console.log(responseText);
@@ -50,20 +143,29 @@ export async function chatWithTeacher(
   newMessage: string,
   context: string
 ): Promise<string> {
-  // Build Gemini-compatible history (must alternate user/model, start with user)
   const history = messages.map((m) => ({
     role: m.role as 'user' | 'model',
     parts: [{ text: m.content }],
   }));
 
-  const chat = model.startChat({ history });
+  const systemInstruction = `${context}
 
-  // Prepend teacher context to first real message so Gemini understands the role
-  const fullMessage = context
-    ? `Context about this teacher's ratings:\n${context}\n\nStudent question: ${newMessage}`
-    : newMessage;
+MODE: TEACHER SUPPORT
+- The user is the same teacher described in the feedback context.
+- Respond directly to the teacher in second person ("you").
+- Focus on constructive coaching, classroom improvement, and practical next steps.
+- Keep tone supportive and professional, never judgmental.
+- Do not frame your response as if speaking to admins or management.
+- Do not invent facts not present in provided comments/ratings.
+- Keep replies concise and actionable.
+- Prioritize answering the current question first.
+- Use chat history only as silent background context.
+- Do not mention previous messages/history unless the user explicitly asks for recap/comparison.`;
 
-  const result = await chat.sendMessage(fullMessage);
+  const result = await runWithGemini(systemInstruction, async (teacherModel) => {
+    const chat = teacherModel.startChat({ history });
+    return chat.sendMessage(newMessage);
+  });
   return result.response.text();
 }
 
@@ -77,22 +179,17 @@ export async function chatWithAdmin(
     parts: [{ text: m.content }],
   }));
 
-  const adminModel = genAI.getGenerativeModel({
-    model: 'gemini-2.5-flash-lite',
-    systemInstruction: context + "\n\nCRITICAL RULE: Return a highly concise, to-the-point reply. Keep it very short. Do not blabber. Provide direct answers."
+  const systemInstruction = context + "\n\nCRITICAL RULES:\n- Return a highly concise, to-the-point reply. Keep it very short.\n- Prioritize the latest user question over prior chat turns.\n- Treat prior history as background only.\n- Do not mention previous messages unless the admin explicitly asks for recap/comparison.";
+  const result = await runWithGemini(systemInstruction, async (adminModel) => {
+    const chat = adminModel.startChat({ history });
+    return chat.sendMessage(newMessage);
   });
-
-  const chat = adminModel.startChat({ history });
-
-  const result = await chat.sendMessage(newMessage);
   return result.response.text();
 }
 
 export async function summarizeChatHistory(
   messages: { role: string; content: string }[]
 ): Promise<string> {
-  const adminModel = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-lite' });
-
   // Convert array of messages into a readable chat log string
   const chatLog = messages
     .map((m) => `${m.role.toUpperCase()}: ${m.content}`)
@@ -107,7 +204,9 @@ CHAT LOG:
 ${chatLog}
   `.trim();
 
-  const chat = adminModel.startChat({ history: [] });
-  const result = await chat.sendMessage(prompt);
+  const result = await runWithGemini(undefined, async (adminModel) => {
+    const chat = adminModel.startChat({ history: [] });
+    return chat.sendMessage(prompt);
+  });
   return result.response.text();
 }

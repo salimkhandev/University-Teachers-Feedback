@@ -33,8 +33,8 @@ export default function TeacherRankingTable({ rankings }: Props) {
     try {
       const res = await client.post(`/admin/report/generate/${teacherId}`);
       setLocalSummaries(prev => ({ ...prev, [teacherId]: res.data.summary }));
-    } catch (err) {
-      alert('Failed to generate report for this teacher.');
+    } catch (err: any) {
+      alert(err.response?.data?.error ?? 'Failed to generate report for this teacher.');
     } finally {
       setGeneratingId(null);
     }
@@ -70,8 +70,8 @@ export default function TeacherRankingTable({ rankings }: Props) {
         return { ...prev, [teacherId]: [...base, { role: 'user', content: text }, { role: 'model', content: res.data.reply }] };
       });
 
-    } catch (err) {
-      alert('Failed to send message to AI.');
+    } catch (err: any) {
+      alert(err.response?.data?.error ?? 'Failed to send message to AI.');
       // Rollback last message optionally
     } finally {
       setChatLoading(prev => ({ ...prev, [teacherId]: false }));

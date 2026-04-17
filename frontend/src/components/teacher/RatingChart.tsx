@@ -3,6 +3,23 @@ import { useTheme } from '../../context/ThemeContext';
 
 interface Props { breakdown: any[] }
 
+function CompactTooltip({ active, payload, label, isDark }: any) {
+  if (!active || !payload?.length) return null;
+  return (
+    <div
+      className="max-w-[160px] sm:max-w-[220px] rounded-lg border p-2 shadow-lg text-xs sm:text-sm whitespace-normal break-words"
+      style={{
+        backgroundColor: isDark ? '#111827' : '#ffffff',
+        borderColor: isDark ? '#374151' : '#e5e7eb',
+        color: isDark ? '#f3f4f6' : '#111827',
+      }}
+    >
+      <p className="font-semibold mb-1">{`Rating: ${label}/10`}</p>
+      <p>{`Students: ${payload[0].value}`}</p>
+    </div>
+  );
+}
+
 export default function RatingChart({ breakdown }: Props) {
   // Build distribution data across all subjects
   const dist: Record<number, number> = {};
@@ -49,14 +66,11 @@ export default function RatingChart({ breakdown }: Props) {
           <XAxis dataKey="rating" tick={{ fill: chartStyles.tick, fontSize: 12 }} />
           <YAxis tick={{ fill: chartStyles.tick, fontSize: 12 }} allowDecimals={false} />
           <Tooltip
-            contentStyle={{ 
-              backgroundColor: chartStyles.tooltipBg, 
-              border: `1px solid ${chartStyles.tooltipBorder}`, 
-              borderRadius: '8px' 
-            }}
-            labelStyle={{ color: chartStyles.tooltipLabel }} 
-            itemStyle={{ color: chartStyles.tooltipText }}
-            formatter={(v: any) => [v, 'Students']} labelFormatter={(l) => `Rating: ${l}/10`} />
+            content={<CompactTooltip isDark={isDark} />}
+            wrapperStyle={{ zIndex: 50 }}
+            allowEscapeViewBox={{ x: false, y: true }}
+            cursor={{ fill: 'rgba(99, 102, 241, 0.08)' }}
+          />
           <Bar dataKey="count" radius={[4, 4, 0, 0]}>
             {data.map((entry) => (
               <Cell key={entry.rating} fill={getColor(entry.rating)} />

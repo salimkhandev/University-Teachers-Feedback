@@ -221,6 +221,14 @@ router.post('/report/generate/:teacherId', async (req: Request, res: Response): 
     console.log(`[AdminRoute] Report generation complete for teacher ${teacherId}.`);
     res.json({ message: 'Report generation complete', summary: summaryText });
   } catch (err: any) {
+    if (String(err?.message || '').includes('No Gemini API key configured')) {
+      res.status(400).json({ error: 'AI key is not configured. Add a Gemini key in AI Settings.' });
+      return;
+    }
+    if (String(err?.message || '').includes('All configured Gemini keys are invalid')) {
+      res.status(400).json({ error: 'All configured AI keys are invalid. Renew/add a valid key in AI Settings.' });
+      return;
+    }
     console.error(`[AdminRoute] Fetch error during report generation:`, err.message || err);
     res.status(500).json({ error: 'Internal server error' });
   }
@@ -413,6 +421,14 @@ router.post('/report/chat/:teacherId', async (req: Request, res: Response): Prom
     
     res.json({ reply, compactedHistory });
   } catch (err: any) {
+    if (String(err?.message || '').includes('No Gemini API key configured')) {
+      res.status(400).json({ error: 'AI key is not configured. Add a Gemini key in AI Settings.' });
+      return;
+    }
+    if (String(err?.message || '').includes('All configured Gemini keys are invalid')) {
+      res.status(400).json({ error: 'All configured AI keys are invalid. Renew/add a valid key in AI Settings.' });
+      return;
+    }
     console.error(`[AdminRoute] Chat error for teacher ${teacherId}:`, err.message || err);
     res.status(500).json({ error: 'Internal server error' });
   }

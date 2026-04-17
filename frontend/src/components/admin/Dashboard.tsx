@@ -15,6 +15,7 @@ const TABS = ['Overview', 'Student Tracking', 'Pending Students', 'Management', 
 export default function AdminDashboard() {
   const { user, logout } = useAuth();
   const [tab, setTab] = useState<typeof TABS[number]>('Overview');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [rankings, setRankings] = useState<any[]>([]);
   const [status,   setStatus]   = useState<any>(null);
   const [loading,  setLoading]  = useState(true);
@@ -63,8 +64,44 @@ export default function AdminDashboard() {
           ⚙ System Setup →
         </Link>
         
-        {/* Navigation Tabs */}
-        <div className="flex gap-1.5 sm:gap-2 mb-6 overflow-x-auto pb-1 scrollbar-none border-b border-base sticky top-0 bg-page z-10 transition-colors duration-200">
+        {/* Navigation Tabs - mobile hamburger */}
+        <div className="sm:hidden mb-4 relative">
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen(prev => !prev)}
+            className="btn-secondary w-full justify-between text-sm"
+            aria-expanded={mobileMenuOpen}
+            aria-label="Toggle admin menu"
+          >
+            <span className="font-medium">{tab}</span>
+            <span className="text-base leading-none">{mobileMenuOpen ? '✕' : '☰'}</span>
+          </button>
+
+          {mobileMenuOpen && (
+            <div className="absolute left-0 right-0 mt-2 rounded-xl border border-base bg-page shadow-lg z-30 p-2 space-y-1">
+              {TABS.map(t => (
+                <button
+                  key={t}
+                  id={`tab-mobile-${t.replace(/\s+/g, '-').toLowerCase()}`}
+                  onClick={() => {
+                    setTab(t);
+                    setMobileMenuOpen(false);
+                  }}
+                  className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
+                    t === tab
+                      ? 'bg-indigo-600 text-white'
+                      : 'text-secondary hover:bg-gray-500/10 hover:text-primary'
+                  }`}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Navigation Tabs - desktop/tablet */}
+        <div className="hidden sm:flex gap-1.5 sm:gap-2 mb-6 overflow-x-auto pb-1 scrollbar-none border-b border-base sticky top-0 bg-page z-10 transition-colors duration-200">
           {TABS.map(t => (
             <button key={t} id={`tab-${t.replace(/\s+/g, '-').toLowerCase()}`}
               onClick={() => setTab(t)}

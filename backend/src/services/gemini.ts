@@ -1,12 +1,11 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { ENV } from '../config/env';
 import AISettings, { GeminiModelOption } from '../models/AISettings';
 
 type RuntimeKey = {
   id?: string;
   label: string;
   apiKey: string;
-  source: 'db' | 'env';
+  source: 'db';
 };
 
 const DEFAULT_MODEL: GeminiModelOption = 'gemini-2.5-flash-lite';
@@ -16,6 +15,13 @@ const average = (nums: number[]): string =>
 
 const getErrorMessage = (err: any): string =>
   String(err?.message || err?.statusText || 'Unknown Gemini error').slice(0, 280);
+
+const isInvalidApiKeyError = (err: any): boolean => {
+  const details = Array.isArray(err?.errorDetails) ? err.errorDetails : [];
+  const detailFlag = details.some((d: any) => String(d?.reason || '').toUpperCase() === 'API_KEY_INVALID');
+  const msgFlag = String(err?.message || '').toUpperCase().includes('API KEY NOT VALID');
+  return detailFlag || msgFlag;
+};
 
 async function getRuntimeAIConfig(): Promise<{ model: GeminiModelOption; keys: RuntimeKey[] }> {
   const settings = await AISettings.findOne().lean();
@@ -30,20 +36,11 @@ async function getRuntimeAIConfig(): Promise<{ model: GeminiModelOption; keys: R
       source: 'db' as const,
     }));
 
-  const keys = [...dbKeys];
-  if (ENV.GEMINI_API_KEY) {
-    keys.push({
-      label: 'ENV key',
-      apiKey: ENV.GEMINI_API_KEY,
-      source: 'env',
-    });
-  }
-
-  if (keys.length === 0) {
+  if (dbKeys.length === 0) {
     throw new Error('No Gemini API key configured. Add one in Admin > AI Settings.');
   }
 
-  return { model: selectedModel, keys };
+  return { model: selectedModel, keys: dbKeys };
 }
 
 async function markKeySuccess(key: RuntimeKey) {
@@ -61,12 +58,14 @@ async function markKeySuccess(key: RuntimeKey) {
 
 async function markKeyFailure(key: RuntimeKey, errorMessage: string) {
   if (key.source !== 'db' || !key.id) return;
+  const shouldDisable = errorMessage.toUpperCase().includes('API KEY NOT VALID') || errorMessage.toUpperCase().includes('API_KEY_INVALID');
   await AISettings.updateOne(
     { 'keys._id': key.id },
     {
       $set: {
         'keys.$.lastFailedAt': new Date(),
         'keys.$.lastError': errorMessage,
+        ...(shouldDisable ? { 'keys.$.isActive': false } : {}),
       },
     }
   );
@@ -97,6 +96,9 @@ async function runWithGemini<T>(
     }
   }
 
+  if (lastErr && isInvalidApiKeyError(lastErr)) {
+    throw new Error('All configured Gemini keys are invalid. Renew or add a valid key in Admin > AI Settings.');
+  }
   throw lastErr || new Error('No Gemini key could complete this request.');
 }
 

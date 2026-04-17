@@ -120,6 +120,14 @@ router.get('/summary', async (req: Request, res: Response): Promise<void> => {
     const summary = await generateAndCacheSummary(teacherId);
     res.json({ summary, cached: false, generatedAt: new Date() });
   } catch (err: any) {
+    if (String(err?.message || '').includes('No Gemini API key configured')) {
+      res.status(400).json({ error: 'AI key is not configured. Ask admin to add a Gemini key in Admin > AI Settings.' });
+      return;
+    }
+    if (String(err?.message || '').includes('All configured Gemini keys are invalid')) {
+      res.status(400).json({ error: 'Configured AI keys are invalid. Ask admin to renew/add a valid key in Admin > AI Settings.' });
+      return;
+    }
     if (err?.status === 429) {
       const teacherId = req.user.id;
       const cooldownMs = parseRetryDelayMs(err);
@@ -241,7 +249,15 @@ Answer in teacher mode. Coach the teacher directly, suggest practical improvemen
     await session.save();
 
     res.json({ reply });
-  } catch (err) {
+  } catch (err: any) {
+    if (String(err?.message || '').includes('No Gemini API key configured')) {
+      res.status(400).json({ error: 'AI key is not configured. Ask admin to add a Gemini key in Admin > AI Settings.' });
+      return;
+    }
+    if (String(err?.message || '').includes('All configured Gemini keys are invalid')) {
+      res.status(400).json({ error: 'Configured AI keys are invalid. Ask admin to renew/add a valid key in Admin > AI Settings.' });
+      return;
+    }
     console.error('[teacher/chat POST]', err);
     res.status(500).json({ error: 'Internal server error' });
   }

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import client from '../../api/client';
 import ThemeToggle from '../common/ThemeToggle';
 
@@ -346,7 +347,19 @@ export default function SetupWizard() {
         <ThemeToggle />
       </div>
       <div className="max-w-4xl mx-auto">
-        <h2 className="text-xl sm:text-2xl font-bold text-primary mb-5 sm:mb-6 pr-12">System Setup</h2>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <div>
+            <Link to="/admin" className="inline-flex items-center gap-1.5 text-secondary hover:text-brand-500 transition-colors text-xs font-medium uppercase tracking-wider mb-2 group">
+              <span className="group-hover:-translate-x-0.5 transition-transform">←</span>Go Back
+            </Link>
+            <h2 className="text-xl sm:text-2xl font-bold text-primary">System Setup</h2>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-xs font-medium text-secondary bg-gray-500/10 px-2 py-1 rounded-md border border-base">
+              Step {currentIndex + 1} of {STEPS.length}
+            </span>
+          </div>
+        </div>
 
         {/* Step indicator */}
         <div className="flex gap-1.5 mb-5 sm:mb-6 overflow-x-auto pb-1 scrollbar-none">
@@ -375,7 +388,7 @@ export default function SetupWizard() {
 
         <div className="flex flex-col-reverse sm:flex-row gap-2 sm:justify-between mt-4">
           <button className="btn-secondary text-sm w-full sm:w-auto" disabled={currentIndex === 0}
-            onClick={() => { setStep(STEPS[currentIndex - 1].key); setMsg(null); }}>← Previous</button>
+            onClick={() => { setStep(STEPS[currentIndex - 1].key); setMsg(null); }}>← Back</button>
           <button className="btn-secondary text-sm w-full sm:w-auto" disabled={currentIndex === STEPS.length - 1}
             onClick={() => { setStep(STEPS[currentIndex + 1].key); setMsg(null); }}>Next →</button>
         </div>

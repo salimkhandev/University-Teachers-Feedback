@@ -515,16 +515,44 @@ router.get('/student-tracking/department/:departmentId', async (req: Request, re
 // GET /api/admin/users
 router.get('/users', async (req: Request, res: Response): Promise<void> => {
   try {
-    const { role } = req.query; // 'student' or 'teacher' or skip for all
+    const { role, semesterId } = req.query;
+    const limit = parseInt(req.query.limit as string) || 0;
+    
+    // Optimization: If filtering students by semester
+    if (role === 'student' && semesterId) {
+      const studentQuery = Student.find({ semesterId: String(semesterId) });
+      if (limit > 0) studentQuery.limit(limit);
+
+      const students = await studentQuery
+        .populate('userId', '-password')
+        .populate('sectionId', 'name')
+        .lean();
+
+      const enriched = students.map((s: any) => {
+        if (!s.userId) return null;
+        return {
+          ...s.userId,
+          rollNumber: s.rollNumber,
+          sectionName: s.sectionId?.name,
+          studentId: s._id
+        };
+      }).filter(Boolean);
+
+      res.json(enriched);
+      return;
+    }
+
     const filter: any = {};
     if (role) filter.role = role;
     
-    const users = await User.find(filter).select('-password').sort({ createdAt: -1 });
+    const userQuery = User.find(filter).select('-password').sort({ createdAt: -1 });
+    if (limit > 0) userQuery.limit(limit);
+    const users = await userQuery;
     
-    // For students, let's also fetch their Student profiles to attach roll number / section info
-    const students = await Student.find().populate('sectionId', 'name').lean();
+    // For students, let's also fetch their Student profiles
+    const studentProfiles = await Student.find().populate('sectionId', 'name').lean();
     const studentsMap = new Map();
-    students.forEach(s => {
+    studentProfiles.forEach(s => {
       studentsMap.set(String(s.userId), s);
     });
 

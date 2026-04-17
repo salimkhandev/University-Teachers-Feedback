@@ -40,41 +40,41 @@ export default function UserModal({ user, onClose, onSave }: { user: any, onClos
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50">
-      <div className="bg-gray-900 border border-gray-800 rounded-lg shadow-xl w-full max-w-md overflow-hidden">
-        <div className="p-4 border-b border-gray-800 flex justify-between items-center bg-gray-950">
-          <h3 className="font-semibold text-white">Edit {user.role === 'student' ? 'Student' : 'Teacher'}</h3>
-          <button onClick={onClose} className="text-gray-500 hover:text-white">&times;</button>
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+      <div className="card w-full max-w-md overflow-hidden p-0">
+        <div className="p-4 border-b border-base flex justify-between items-center bg-gray-500/5">
+          <h3 className="font-semibold text-primary">Edit {user.role === 'student' ? 'Student' : 'Teacher'}</h3>
+          <button onClick={onClose} className="text-secondary hover:text-primary transition-colors text-xl leading-none">&times;</button>
         </div>
-        <form onSubmit={handleSubmit} className="p-4 space-y-4">
+        <form onSubmit={handleSubmit} className="p-5 space-y-4">
           <div>
-            <label className="block text-xs font-medium text-gray-400 mb-1">Name</label>
-            <input type="text" className="input-field w-full bg-gray-800 text-gray-100 placeholder:text-gray-500 border-gray-700 focus:border-brand-500" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} required />
+            <label className="block text-xs font-semibold text-secondary mb-1.5 uppercase tracking-wider">Name</label>
+            <input type="text" className="input" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} required />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-400 mb-1">Username</label>
-            <input type="text" className="input-field w-full bg-gray-800 text-gray-100 placeholder:text-gray-500 border-gray-700 focus:border-brand-500" value={formData.username} onChange={e => setFormData({ ...formData, username: e.target.value })} required />
+            <label className="block text-xs font-semibold text-secondary mb-1.5 uppercase tracking-wider">Username</label>
+            <input type="text" className="input" value={formData.username} onChange={e => setFormData({ ...formData, username: e.target.value })} required />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-400 mb-1">Email</label>
-            <input type="email" className="input-field w-full bg-gray-800 text-gray-100 placeholder:text-gray-500 border-gray-700 focus:border-brand-500" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
+            <label className="block text-xs font-semibold text-secondary mb-1.5 uppercase tracking-wider">Email</label>
+            <input type="email" className="input" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
           </div>
           {user.role === 'student' && (
             <div>
-              <label className="block text-xs font-medium text-gray-400 mb-1">Roll Number</label>
-              <input type="text" className="input-field w-full bg-gray-800 text-gray-100 placeholder:text-gray-500 border-gray-700 focus:border-brand-500" value={formData.rollNumber} onChange={e => setFormData({ ...formData, rollNumber: e.target.value })} />
+              <label className="block text-xs font-semibold text-secondary mb-1.5 uppercase tracking-wider">Roll Number</label>
+              <input type="text" className="input" value={formData.rollNumber} onChange={e => setFormData({ ...formData, rollNumber: e.target.value })} />
             </div>
           )}
           <div>
-            <label className="block text-xs font-medium text-gray-400 mb-1">New Password (leave blank to keep current)</label>
-            <input type="password" className="input-field w-full bg-gray-800 text-gray-100 placeholder:text-gray-500 border-gray-700 focus:border-brand-500" value={password} onChange={e => setPassword(e.target.value)} />
+            <label className="block text-xs font-semibold text-secondary mb-1.5 uppercase tracking-wider">New Password (optional)</label>
+            <input type="password" placeholder="••••••••" className="input" value={password} onChange={e => setPassword(e.target.value)} />
           </div>
           
-          <div className="pt-4 border-t border-gray-800 flex justify-between items-center">
-            <button type="button" onClick={handleDelete} className="text-xs text-red-500 hover:text-red-400 font-medium">Delete Account</button>
-            <div className="flex gap-2">
-              <button type="button" onClick={onClose} className="btn-secondary text-sm">Cancel</button>
-              <button type="submit" disabled={loading} className="btn-primary text-sm">{loading ? 'Saving...' : 'Save Changes'}</button>
+          <div className="pt-6 border-t border-base flex justify-between items-center mt-6">
+            <button type="button" onClick={handleDelete} className="text-xs text-red-500 hover:text-red-400 font-semibold transition-colors">Delete Account</button>
+            <div className="flex gap-3">
+              <button type="button" onClick={onClose} className="btn-secondary px-6">Cancel</button>
+              <button type="submit" disabled={loading} className="btn-primary flex-1 min-w-[120px]">{loading ? 'Saving...' : 'Save Changes'}</button>
             </div>
           </div>
         </form>

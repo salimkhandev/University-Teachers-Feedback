@@ -7,15 +7,59 @@ export default function Management() {
   const [loading, setLoading] = useState(true);
   const [roleFilter, setRoleFilter] = useState<'teacher' | 'student'>('student');
   const [editingUser, setEditingUser] = useState<any | null>(null);
+  const [depts, setDepts] = useState<any[]>([]);
+  const [sems, setSems] = useState<any[]>([]);
+  const [selectedDept, setSelectedDept] = useState('');
+  const [selectedSem, setSelectedSem] = useState('');
+
+  useEffect(() => {
+    loadDepts();
+  }, []);
+
+  useEffect(() => {
+    if (selectedDept) {
+      loadSemesters(selectedDept);
+    } else {
+      setSems([]);
+      setSelectedSem('');
+    }
+  }, [selectedDept]);
 
   useEffect(() => {
     loadUsers();
-  }, [roleFilter]);
+  }, [roleFilter, selectedSem]);
+
+  const loadDepts = async () => {
+    try {
+      const res = await client.get('/setup/departments');
+      setDepts(res.data);
+    } catch (err) {
+      console.error('Failed to load departments', err);
+    }
+  };
+
+  const loadSemesters = async (deptId: string) => {
+    try {
+      const res = await client.get(`/setup/semesters?departmentId=${deptId}`);
+      setSems(res.data);
+    } catch (err) {
+      console.error('Failed to load semesters', err);
+    }
+  };
 
   const loadUsers = async () => {
+    if (roleFilter === 'student' && !selectedSem) {
+      setUsers([]);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     try {
-      const res = await client.get(`/admin/users?role=${roleFilter}`);
+      const url = roleFilter === 'student' 
+        ? `/admin/users?role=student&semesterId=${selectedSem}&limit=50`
+        : `/admin/users?role=teacher`;
+      const res = await client.get(url);
       setUsers(res.data);
     } catch (err) {
       console.error('Failed to load users', err);
@@ -34,19 +78,48 @@ export default function Management() {
           <p className="text-xs text-secondary">Manage teacher and student accounts</p>
         </div>
         
-        <div className="flex bg-gray-500/5 rounded p-1 border border-base">
-          <button 
-            className={`px-4 py-1.5 text-xs font-medium rounded transition-colors ${roleFilter === 'student' ? 'bg-indigo-600 text-white' : 'text-secondary hover:text-primary'}`}
-            onClick={() => setRoleFilter('student')}
-          >
-            Students
-          </button>
-          <button 
-            className={`px-4 py-1.5 text-xs font-medium rounded transition-colors ${roleFilter === 'teacher' ? 'bg-indigo-600 text-white' : 'text-secondary hover:text-primary'}`}
-            onClick={() => setRoleFilter('teacher')}
-          >
-            Teachers
-          </button>
+        <div className="flex items-center gap-2">
+          {roleFilter === 'student' && (
+            <>
+              <select 
+                className="bg-[var(--input-bg)] text-primary border border-base rounded-lg text-xs py-1.5 px-3 min-w-[140px] focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
+                value={selectedDept}
+                onChange={(e) => {
+                  setSelectedDept(e.target.value);
+                  setSelectedSem('');
+                }}
+              >
+                <option value="" className="bg-[var(--bg-card)]">Select Dept</option>
+                {depts.map(d => <option key={d._id} value={d._id} className="bg-[var(--bg-card)]">{d.name}</option>)}
+              </select>
+
+              {selectedDept && (
+                <select 
+                  className="bg-[var(--input-bg)] text-primary border border-base rounded-lg text-xs py-1.5 px-3 min-w-[140px] focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
+                  value={selectedSem}
+                  onChange={(e) => setSelectedSem(e.target.value)}
+                >
+                  <option value="" className="bg-[var(--bg-card)]">Select Semester</option>
+                  {sems.map(s => <option key={s._id} value={s._id} className="bg-[var(--bg-card)]">{s.label || `Semester ${s.number}`}</option>)}
+                </select>
+              )}
+            </>
+          )}
+
+          <div className="flex bg-gray-500/5 rounded p-1 border border-base ml-2">
+            <button 
+              className={`px-4 py-1.5 text-xs font-medium rounded transition-colors ${roleFilter === 'student' ? 'bg-indigo-600 text-white' : 'text-secondary hover:text-primary'}`}
+              onClick={() => setRoleFilter('student')}
+            >
+              Students
+            </button>
+            <button 
+              className={`px-4 py-1.5 text-xs font-medium rounded transition-colors ${roleFilter === 'teacher' ? 'bg-indigo-600 text-white' : 'text-secondary hover:text-primary'}`}
+              onClick={() => setRoleFilter('teacher')}
+            >
+              Teachers
+            </button>
+          </div>
         </div>
       </div>
 
@@ -66,9 +139,16 @@ export default function Management() {
               <tr>
                 <td colSpan={5} className="py-8 text-center text-secondary">Loading accounts...</td>
               </tr>
+            ) : roleFilter === 'student' && !selectedSem ? (
+              <tr>
+                <td colSpan={5} className="py-8 text-center text-secondary">Please select a department and semester to view students.</td>
+              </tr>
             ) : filteredUsers.length === 0 ? (
               <tr>
-                <td colSpan={5} className="py-8 text-center text-secondary">No {roleFilter}s found.</td>
+                <td colSpan={5} className="py-12 text-center">
+                  <p className="text-secondary">No {roleFilter}s found.</p>
+                  {roleFilter === 'student' && <p className="text-xs text-secondary/60 mt-1">Showing up to 50 students per semester.</p>}
+                </td>
               </tr>
             ) : (
               filteredUsers.map((u, idx) => (
@@ -101,8 +181,13 @@ export default function Management() {
       <div className="md:hidden space-y-3 flex-1">
         {loading ? (
           <div className="py-8 text-center text-secondary">Loading accounts...</div>
+        ) : roleFilter === 'student' && !selectedSem ? (
+          <div className="py-8 text-center text-secondary">Please select a department and semester to view students.</div>
         ) : filteredUsers.length === 0 ? (
-          <div className="py-8 text-center text-secondary">No {roleFilter}s found.</div>
+          <div className="py-8 text-center text-secondary text-sm">
+            <p>No {roleFilter}s found.</p>
+            {roleFilter === 'student' && <p className="text-[10px] opacity-60 mt-1">Showing up to 50 students per semester.</p>}
+          </div>
         ) : (
           filteredUsers.map((u, idx) => (
             <div key={u._id || idx} className="rounded-lg border border-base bg-gray-500/5 p-3">

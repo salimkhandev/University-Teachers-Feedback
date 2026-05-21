@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
-const required = ['PORT', 'MONGO_URI', 'JWT_SECRET', 'JWT_REFRESH_SECRET'];
+const required = ['MONGO_URI', 'JWT_SECRET', 'JWT_REFRESH_SECRET'];
 
 for (const key of required) {
   if (!process.env[key]) {
@@ -10,7 +10,7 @@ for (const key of required) {
 }
 
 export const ENV = {
-  PORT:               process.env.PORT!,
+  PORT:               process.env.PORT || '5000',
   MONGO_URI:          process.env.MONGO_URI!,
   JWT_SECRET:         process.env.JWT_SECRET!,
   JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET!,

@@ -43,11 +43,14 @@ app.use('/api/admin',   adminRoutes);
 // Health check
 app.get('/api/health', (_req, res) => res.json({ status: 'ok' }));
 
-connectDB()
-  .then(() => {
-    app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
-  })
-  .catch((err) => {
-    console.error('❌ Failed to connect to MongoDB:', err);
-    process.exit(1);
-  });
+// Connect to Database (handled asynchronously, Mongoose buffers queries)
+connectDB().catch((err) => {
+  console.error('❌ Failed to connect to MongoDB:', err);
+});
+
+// Start listening only in non-serverless environments (Vercel doesn't need app.listen)
+if (process.env.VERCEL !== '1') {
+  app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
+}
+
+export default app;

@@ -80,7 +80,11 @@ export default function StudentTracking() {
            <button 
              key={d._id}
              onClick={() => setActiveDeptId(d._id)}
-             className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 cursor-pointer ${activeDeptId === d._id ? 'bg-brand-500 text-white shadow-lg shadow-brand-500/30' : 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-gray-200'}`}
+             className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 cursor-pointer ${
+               activeDeptId === d._id 
+                 ? 'bg-brand-500 text-white shadow-lg shadow-brand-500/30' 
+                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200'
+             }`}
            >
              {d.name}
            </button>

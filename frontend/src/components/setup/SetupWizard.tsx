@@ -160,7 +160,7 @@ export default function SetupWizard() {
             <Field label="Total Semesters to Create" id="sem-num" type="number" value={f.number ?? ''} onChange={set('number')} placeholder="8" />
             <p className="text-xs text-gray-500">This will automatically generate all semesters from 1 up to the number provided.</p>
             <button className="btn-primary" disabled={loading}
-              onClick={() => submit({ departmentId: f.departmentId, number: Number(f.number) }, '/setup/semesters').then(() => f.departmentId && loadSemesters(f.departmentId))}>
+              onClick={() => submit({ departmentId: f.departmentId, number: Number(f.number) }, '/setup/semesters').then(() => { if (f.departmentId) loadSemesters(f.departmentId); })}>
               {loading ? 'Creating...' : `Create ${f.number || 'N'} Semesters`}
             </button>
             {f.departmentId && semesters.length > 0 && (
@@ -183,7 +183,7 @@ export default function SetupWizard() {
             <Field label="Total Sections to Create" id="sec-count" type="number" value={f.count ?? ''} onChange={set('count')} placeholder="2" />
             <p className="text-xs text-gray-500">This will automatically generate sections named A, B, C... up to the number provided.</p>
             <button className="btn-primary" disabled={loading}
-              onClick={() => submit({ semesterId: f.semesterId, count: Number(f.count) }, '/setup/sections').then(() => f.semesterId && loadSections(f.semesterId))}>
+              onClick={() => submit({ semesterId: f.semesterId, count: Number(f.count) }, '/setup/sections').then(() => { if (f.semesterId) loadSections(f.semesterId); })}>
               {loading ? 'Creating...' : `Create ${f.count || 'N'} Sections`}
             </button>
             {f.semesterId && sections.length > 0 && (

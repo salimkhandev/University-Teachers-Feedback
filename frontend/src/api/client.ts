@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // With Vite proxy, /api goes through localhost:5173 — no CORS issues at all
 const client = axios.create({
-  baseURL: '/api',
+  baseURL: import.meta.env.VITE_API_URL || '/api',
 });
 
 client.interceptors.request.use((config) => {

@@ -16,9 +16,20 @@ export const generateRollNumber = async (sectionId: string): Promise<string> => 
   const year = new Date().getFullYear().toString().slice(-2);
   const deptCode = department.code.toUpperCase();
 
-  // Count existing students in this department to produce a sequential number
-  const count = await Student.countDocuments({ semesterId: section.semesterId });
-  const seq = String(count + 1).padStart(4, '0');
+  // Count existing students in this semester, then ensure global uniqueness of roll number
+  let count = await Student.countDocuments({ semesterId: section.semesterId });
+  let rollNumber = '';
+  let exists = true;
+  while (exists) {
+    const seq = String(count + 1).padStart(4, '0');
+    rollNumber = `${deptCode}-${year}-${seq}`;
+    const check = await Student.findOne({ rollNumber });
+    if (!check) {
+      exists = false;
+    } else {
+      count++;
+    }
+  }
 
-  return `${deptCode}-${year}-${seq}`;
+  return rollNumber;
 };

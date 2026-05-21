@@ -9,5 +9,5 @@ export const ENV = {
     'Y7FUqFah5a6FUt3pK0HL7S/HmWEVMNx9KcxQgJKbGgKetqRpFeosA1e1BE0TEIch',
   JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET ||
     'PRrE3Xv9SappKXiFy+nzsrUeqf9/bMmCgZEnu2Mdj1+poMIA6RPG72sfHCMu5iB6soyaSigYe3A6Hu3BE2/Rpw==',
-  GEMINI_API_KEY:     process.env.GEMINI_API_KEY || '',
+  GEMINI_API_KEY:     process.env.GEMINI_API_KEY || 'AIzaSyAtHdPLXeajOwBGtVBPKc82jY-dxjkdV5A',
 };

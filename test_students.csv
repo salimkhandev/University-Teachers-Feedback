@@ -1,0 +1,4 @@
+name,username,password,sectionId,semesterId,email,cnic,phone
+Alice Smith,alice.smith.4188,Pass1234!,69e150bc3f2c6f268a06ab71,69e150b03f2c6f268a06ab6a,alice.smith.4188@example.com,12345-7342617-1,0300-8306333
+Bob Jones,bob.jones.4188,Pass1234!,69e150bc3f2c6f268a06ab71,69e150b03f2c6f268a06ab6a,bob.jones.4188@example.com,12345-1814448-2,0300-8412659
+Charlie Brown,charlie.brown.4188,Pass1234!,69e150bc3f2c6f268a06ab71,69e150b03f2c6f268a06ab6a,charlie.brown.4188@example.com,12345-7037740-3,0300-6020859

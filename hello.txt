@@ -313,4 +313,4 @@ export const defaultHtml = `<div class="w-[800px] max-w-[800px] p-[24px] bg-whit
     </div>
   </div>
 </div>
-`
+`

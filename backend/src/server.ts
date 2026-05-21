@@ -13,18 +13,10 @@ import adminRoutes    from './routes/admin';
 const app  = express();
 const PORT = process.env.PORT ?? 5000;
 
-// Allow any localhost port in dev (Vite uses 5173, can change)
-const ALLOWED_ORIGINS = [
-  'http://localhost:5173',
-  'http://localhost:5174',
-  'http://localhost:3000',
-  'https://studentfeedbackicp.vercel.app',
-];
 app.use(cors({
   origin: (origin, cb) => {
-    // Allow requests with no origin (curl, Postman, mobile apps)
-    if (!origin || ALLOWED_ORIGINS.includes(origin) || origin.endsWith('.vercel.app')) return cb(null, true);
-    cb(new Error('Not allowed by CORS'));
+    // Allow any incoming origin dynamically to completely prevent any CORS blocks
+    cb(null, true);
   },
   credentials: true,
   methods:      ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],

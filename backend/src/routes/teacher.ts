@@ -89,18 +89,53 @@ router.get('/summary', async (req: Request, res: Response): Promise<void> => {
     const assignmentIds = assignments.map((a) => a._id);
     const currentCount = await Feedback.countDocuments({ assignmentId: { $in: assignmentIds } });
 
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+
     const cached = await AISummary.findOne({ teacherId: new Types.ObjectId(teacherId) });
 
-    // Return cache if feedback count hasn't changed since last generation
-    if (cached && cached.feedbackCount === currentCount) {
-      res.json({ summary: cached.summaryText, cached: true, generatedAt: cached.generatedAt });
+    const force = String(req.query.force).toLowerCase() === 'true';
+
+    console.log(`[Teacher Summary API] Fetching summary for teacher ${teacherId}. force=${force}, currentCount=${currentCount}, cachedCount=${cached?.feedbackCount}`);
+
+    // Return cache if feedback count hasn't changed since last generation and we aren't forcing a refresh
+    if (cached && cached.feedbackCount === currentCount && !force) {
+      console.log(`[Teacher Summary API] Serving cached summary to teacher ${teacherId}.`);
+      res.json({ summary: cached.summaryText, cached: true, generatedAt: cached.generatedAt, isStale: false, noCache: false });
       return;
     }
 
     if (currentCount === 0) {
-      res.json({ summary: 'No feedback has been submitted yet.', cached: false });
+      console.log(`[Teacher Summary API] No feedback exists for teacher ${teacherId}.`);
+      res.json({ summary: 'No feedback has been submitted yet.', cached: false, isStale: false, noCache: true });
       return;
     }
+
+    // Stale Cache Case: If we have cache but feedback count changed, and user didn't force generate
+    if (cached && !force) {
+      console.log(`[Teacher Summary API] Serving stale cached summary to teacher ${teacherId}.`);
+      res.json({
+        summary: cached.summaryText,
+        cached: true,
+        generatedAt: cached.generatedAt,
+        isStale: true,
+        noCache: false
+      });
+      return;
+    }
+
+    // No Cache Case: If we have no cache and user didn't force generate
+    if (!cached && !force) {
+      console.log(`[Teacher Summary API] No cached summary exists for teacher ${teacherId} and force is false.`);
+      res.json({
+        summary: 'No summary has been generated yet.',
+        cached: false,
+        isStale: false,
+        noCache: true
+      });
+      return;
+    }
+
+    console.log(`[Teacher Summary API] Force or new summary requested. Generating real-time summary for teacher ${teacherId}...`);
 
     const retryAfterTs = summaryRetryAfterByTeacher.get(teacherId) ?? 0;
     if (Date.now() < retryAfterTs) {
@@ -118,7 +153,7 @@ router.get('/summary', async (req: Request, res: Response): Promise<void> => {
     }
 
     const summary = await generateAndCacheSummary(teacherId);
-    res.json({ summary, cached: false, generatedAt: new Date() });
+    res.json({ summary, cached: false, generatedAt: new Date(), isStale: false, noCache: false });
   } catch (err: any) {
     if (String(err?.message || '').includes('No Gemini API key configured')) {
       res.status(400).json({ error: 'AI key is not configured. Ask admin to add a Gemini key in Admin > AI Settings.' });

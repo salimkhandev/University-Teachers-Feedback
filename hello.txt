@@ -1,0 +1,316 @@
+export const defaultHtml = `<div class="w-[800px] max-w-[800px] p-[24px] bg-white box-border">
+  <!-- Header Section -->
+  <div class="text-center mb-[32px]">
+    <h1 class="text-[36px] font-bold text-gray-800 c1320 c1003">Salim Khan</h1>
+    <p class="text-[18px] text-gray-600 c1351 c1034">Full Stack Developer</p>
+    <div class="mt-[8px] text-[14px] text-gray-500 flex justify-center space-x-[16px]">
+      <span class="c1391">
+        <i class="fas fa-envelope mr-[4px] c1077">
+        </i>
+        <span class="label c1107">salim.khan@email.com</span>
+      </span>
+      <span class="c1432">
+        <i class="fas fa-phone mr-[4px] c1163">
+        </i>
+        <span class="label c1191">+1 (123) 456-7890</span>
+      </span>
+      <span class="c1471">
+        <i class="fas fa-map-marker-alt mr-[4px] c1246">
+        </i>
+        <span class="label c1274">City, Country</span>
+      </span>
+      <span class="c1510">
+        <i class="fab fa-linkedin mr-[4px] c1329">
+        </i>
+        <span class="label c1358">linkedin.com/in/salimkhan</span>
+      </span>
+      <span class="c1550">
+        <i class="fab fa-github mr-[4px] c1413">
+        </i>
+        <span class="label c1441">github.com/salimkhan</span>
+      </span>
+    </div>
+  </div>
+  <!-- Main Content Area -->
+  <div class="flex flex-col flex-row gap-[24px]">
+    <!-- Left Sidebar (Skills, Education, Links) -->
+    <div class="w-[800px] w-[266px] flex flex-col gap-[24px]">
+      <!-- Skills Section -->
+      <div class="bg-gray-50 p-[16px] rounded-[8px] box-border">
+        <h2 class="text-[20px] font-semibold text-gray-700 border-b-[2px] border-gray-200 pb-[8px] mb-[12px] c1720 c1565">Skills</h2>
+        <div class="text-[14px] text-gray-600">
+          <h3 class="font-medium mb-[4px] c1759 c1603">Programming Languages:</h3>
+          <p class="mb-[8px] c1790 c1633">JavaScript (ES6+), Python, Java, SQL, HTML5, CSS3</p>
+          <h3 class="font-medium mb-[4px] c1820 c1662">Frontend:</h3>
+          <p class="mb-[8px] c1849 c1690">React, Vue.js, Angular, Redux, Tailwind CSS, Bootstrap, Webpack</p>
+          <h3 class="font-medium mb-[4px] c1878 c1718">Backend:</h3>
+          <p class="mb-[8px] c1907 c1746">Node.js, Express.js, Django, Flask, Spring Boot</p>
+          <h3 class="font-medium mb-[4px] c1936 c1774">Databases:</h3>
+          <p class="mb-[8px] c1965 c1802">PostgreSQL, MySQL, MongoDB, Redis</p>
+          <h3 class="font-medium mb-[4px] c1994 c1830">DevOps &amp; Tools:</h3>
+          <p class="mb-[8px] c2023 c1858">Docker, Kubernetes, AWS, Git, CI/CD, RESTful APIs</p>
+        </div>
+      </div>
+      <!-- Education Section -->
+      <div class="bg-gray-50 p-[16px] rounded-[8px] box-border">
+        <h2 class="text-[20px] font-semibold text-gray-700 border-b-[2px] border-gray-200 pb-[8px] mb-[12px] c2197 c2009">Education</h2>
+        <div class="text-[14px] text-gray-600">
+          <h3 class="font-medium c2229 c2040">M.S. in Computer Science</h3>
+          <p class="italic mb-[4px] c2258 c2068">University Name</p>
+          <p class="text-[12px] text-gray-500 mb-[8px] c2288 c2097">Graduation Year</p>
+          <h3 class="font-medium c2318 c2126">B.S. in Software Engineering</h3>
+          <p class="italic mb-[4px] c2347 c2154">Another University</p>
+          <p class="text-[12px] text-gray-500 c2376 c2182">Graduation Year</p>
+        </div>
+      </div>
+      <!-- Links Section -->
+      <div class="bg-gray-50 p-[16px] rounded-[8px] box-border">
+        <h2 class="text-[20px] font-semibold text-gray-700 border-b-[2px] border-gray-200 pb-[8px] mb-[12px] c2506 c2297">Links</h2>
+        <div class="text-[14px] text-gray-600 space-y-[8px]">
+          <p class="c2539">
+            <i class="fas fa-link mr-[8px] c2333">
+            </i>
+            <a href="#" class="text-blue-600 hover:underline c2562 c2362">Portfolio Website</a>
+          </p>
+          <p class="c2623">
+            <i class="fas fa-code mr-[8px] c2422">
+            </i>
+            <a href="#" class="text-blue-600 hover:underline c2645 c2450">GitHub Profile</a>
+          </p>
+          <p class="c2704">
+            <i class="fab fa-linkedin mr-[8px] c2508">
+            </i>
+            <a href="#" class="text-blue-600 hover:underline c2725 c2535">LinkedIn Profile</a>
+          </p>
+        </div>
+      </div>
+    </div>
+    <!-- Right Main Content (Experience, Projects) -->
+    <div class="w-[800px] w-[534px] flex flex-col gap-[24px]">
+      <!-- Experience Section -->
+      <div class="bg-white p-[16px] rounded-[8px] box-border">
+        <h2 class="text-[24px] font-bold text-gray-700 border-b-[4px] border-blue-500 pb-[8px] mb-[20px] c2871 c2640">Experience</h2>
+        <div class="mb-[24px]">
+          <h3 class="text-[18px] font-semibold text-gray-800 c2908 c2676">Senior Full Stack Developer</h3>
+          <p class="italic text-gray-600 mb-[4px] c2937 c2704">Tech Solutions Inc. | City, Country</p>
+          <p class="text-[12px] text-gray-500 mb-[12px] c2966 c2732">Month Year – Present</p>
+          <ul class="list-disc list-inside text-[14px] text-gray-700 space-y-[8px] ml-[16px]">
+            <li class="c3001 c2766">Led development of scalable microservices using Node.js and Express.js, improving API response times by 25%.</li>
+            <li class="c3030 c2794">Designed and implemented complex database schemas for PostgreSQL and MongoDB, ensuring data integrity and performance.</li>
+            <li class="c3059 c2822">Developed responsive user interfaces with React and Tailwind CSS, enhancing user experience and engagement.</li>
+            <li class="c3088 c2850">Implemented CI/CD pipelines using Docker and Jenkins, automating deployment and reducing release cycles.</li>
+            <li class="c3117 c2878">Mentored junior developers, conducted code reviews, and promoted best practices in software development.</li>
+          </ul>
+        </div>
+        <div class="mb-[24px]">
+          <h3 class="text-[18px] font-semibold text-gray-800 c3249 c2992">Full Stack Developer</h3>
+          <p class="italic text-gray-600 mb-[4px] c3278 c3020">Innovatech Ltd. | City, Country</p>
+          <p class="text-[12px] text-gray-500 mb-[12px] c3307 c3048">Month Year – Month Year</p>
+          <ul class="list-disc list-inside text-[14px] text-gray-700 space-y-[8px] ml-[16px]">
+            <li class="c3339 c3079">Built and maintained RESTful APIs using Python with Flask and SQLAlchemy for a client management system.</li>
+            <li class="c3368 c3107">Developed frontend components using Vue.js and Bootstrap, integrating with backend services.</li>
+            <li class="c3397 c3135">Managed cloud infrastructure on AWS, including EC2, S3, and RDS, ensuring high availability.</li>
+            <li class="c3426 c3163">Collaborated with cross-functional teams to define, design, and ship new features.</li>
+            <li class="c3455 c3191">Troubleshot and resolved bugs, improving application stability by 15%.</li>
+          </ul>
+        </div>
+        <div class="mb-[24px]">
+          <h3 data-pb-pushed="true" class="text-[18px] font-semibold text-gray-800 c3587 c3306" style="--pb-orig-mt:0px;--pb-mt-active:true;margin-top:135px;--pb-applied-mt:135px;">Junior Full Stack Developer</h3>
+          <p class="italic text-gray-600 mb-[4px] c3616 c3334">Web Innovations Co. | City, Country</p>
+          <p class="text-[12px] text-gray-500 mb-[12px] c3645 c3362">Month Year – Month Year</p>
+          <ul class="list-disc list-inside text-[14px] text-gray-700 space-y-[8px] ml-[16px]">
+            <li class="c3677 c3393">Assisted in the development of web applications using JavaScript, Node.js, and Express.js.</li>
+            <li class="c3706 c3420">Contributed to the design and implementation of frontend features using HTML, CSS, and jQuery.</li>
+            <li class="c3735 c3448">Worked with MySQL databases, writing SQL queries and managing data.</li>
+            <li class="c3764 c3476">Participated in daily stand-ups and contributed to agile development processes.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="bg-white p-[16px] rounded-[8px] box-border">
+        <h2 class="text-[24px] font-bold text-gray-700 border-b-[4px] border-blue-500 pb-[8px] mb-[20px] c2871 c2640">Experience</h2>
+        <div class="mb-[24px]">
+          <h3 class="text-[18px] font-semibold text-gray-800 c2908 c2676">Senior Full Stack Developer</h3>
+          <p class="italic text-gray-600 mb-[4px] c2937 c2704">Tech Solutions Inc. | City, Country</p>
+          <p class="text-[12px] text-gray-500 mb-[12px] c2966 c2732">Month Year – Present</p>
+          <ul class="list-disc list-inside text-[14px] text-gray-700 space-y-[8px] ml-[16px]">
+            <li class="c3001 c2766">Led development of scalable microservices using Node.js and Express.js, improving API response times by 25%.</li>
+            <li class="c3030 c2794">Designed and implemented complex database schemas for PostgreSQL and MongoDB, ensuring data integrity and performance.</li>
+            <li class="c3059 c2822">Developed responsive user interfaces with React and Tailwind CSS, enhancing user experience and engagement.</li>
+            <li class="c3088 c2850">Implemented CI/CD pipelines using Docker and Jenkins, automating deployment and reducing release cycles.</li>
+            <li class="c3117 c2878">Mentored junior developers, conducted code reviews, and promoted best practices in software development.</li>
+          </ul>
+        </div>
+        <div class="mb-[24px]">
+          <h3 class="text-[18px] font-semibold text-gray-800 c3249 c2992">Full Stack Developer</h3>
+          <p class="italic text-gray-600 mb-[4px] c3278 c3020">Innovatech Ltd. | City, Country</p>
+          <p class="text-[12px] text-gray-500 mb-[12px] c3307 c3048">Month Year – Month Year</p>
+          <ul class="list-disc list-inside text-[14px] text-gray-700 space-y-[8px] ml-[16px]">
+            <li class="c3339 c3079">Built and maintained RESTful APIs using Python with Flask and SQLAlchemy for a client management system.</li>
+            <li class="c3368 c3107">Developed frontend components using Vue.js and Bootstrap, integrating with backend services.</li>
+            <li class="c3397 c3135">Managed cloud infrastructure on AWS, including EC2, S3, and RDS, ensuring high availability.</li>
+            <li data-pb-pushed="true" class="c3426 c3163" style="--pb-orig-mt:0px;--pb-mt-active:true;margin-top:45.66650390625px;--pb-applied-mt:45.66650390625px;">Collaborated with cross-functional teams to define, design, and ship new features.</li>
+            <li class="c3455 c3191">Troubleshot and resolved bugs, improving application stability by 15%.</li>
+          </ul>
+        </div>
+        <div class="mb-[24px]">
+          <h3 class="text-[18px] font-semibold text-gray-800 c3587 c3306">Junior Full Stack Developer</h3>
+          <p class="italic text-gray-600 mb-[4px] c3616 c3334">Web Innovations Co. | City, Country</p>
+          <p class="text-[12px] text-gray-500 mb-[12px] c3645 c3362">Month Year – Month Year</p>
+          <ul class="list-disc list-inside text-[14px] text-gray-700 space-y-[8px] ml-[16px]">
+            <li class="c3677 c3393">Assisted in the development of web applications using JavaScript, Node.js, and Express.js.</li>
+            <li class="c3706 c3420">Contributed to the design and implementation of frontend features using HTML, CSS, and jQuery.</li>
+            <li class="c3735 c3448">Worked with MySQL databases, writing SQL queries and managing data.</li>
+            <li class="c3764 c3476">Participated in daily stand-ups and contributed to agile development processes.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="bg-white p-[16px] rounded-[8px] box-border">
+        <h2 class="text-[24px] font-bold text-gray-700 border-b-[4px] border-blue-500 pb-[8px] mb-[20px] c2871 c2640">Experience</h2>
+        <div class="mb-[24px]">
+          <h3 class="text-[18px] font-semibold text-gray-800 c2908 c2676">Senior Full Stack Developer</h3>
+          <p class="italic text-gray-600 mb-[4px] c2937 c2704">Tech Solutions Inc. | City, Country</p>
+          <p class="text-[12px] text-gray-500 mb-[12px] c2966 c2732">Month Year – Present</p>
+          <ul class="list-disc list-inside text-[14px] text-gray-700 space-y-[8px] ml-[16px]">
+            <li class="c3001 c2766">Led development of scalable microservices using Node.js and Express.js, improving API response times by 25%.</li>
+            <li class="c3030 c2794">Designed and implemented complex database schemas for PostgreSQL and MongoDB, ensuring data integrity and performance.</li>
+            <li class="c3059 c2822">Developed responsive user interfaces with React and Tailwind CSS, enhancing user experience and engagement.</li>
+            <li class="c3088 c2850">Implemented CI/CD pipelines using Docker and Jenkins, automating deployment and reducing release cycles.</li>
+            <li class="c3117 c2878">Mentored junior developers, conducted code reviews, and promoted best practices in software development.</li>
+          </ul>
+        </div>
+        <div class="mb-[24px]">
+          <h3 class="text-[18px] font-semibold text-gray-800 c3249 c2992">Full Stack Developer</h3>
+          <p class="italic text-gray-600 mb-[4px] c3278 c3020">Innovatech Ltd. | City, Country</p>
+          <p class="text-[12px] text-gray-500 mb-[12px] c3307 c3048">Month Year – Month Year</p>
+          <ul class="list-disc list-inside text-[14px] text-gray-700 space-y-[8px] ml-[16px]">
+            <li class="c3339 c3079">Built and maintained RESTful APIs using Python with Flask and SQLAlchemy for a client management system.</li>
+            <li class="c3368 c3107">Developed frontend components using Vue.js and Bootstrap, integrating with backend services.</li>
+            <li data-pb-pushed="true" class="c3397 c3135" style="--pb-orig-mt:0px;--pb-mt-active:true;margin-top:11.01025390625px;--pb-applied-mt:11.01025390625px;">Managed cloud infrastructure on AWS, including EC2, S3, and RDS, ensuring high availability.</li>
+            <li class="c3426 c3163">Collaborated with cross-functional teams to define, design, and ship new features.</li>
+            <li class="c3455 c3191">Troubleshot and resolved bugs, improving application stability by 15%.</li>
+          </ul>
+        </div>
+        <div class="mb-[24px]">
+          <h3 class="text-[18px] font-semibold text-gray-800 c3587 c3306">Junior Full Stack Developer</h3>
+          <p class="italic text-gray-600 mb-[4px] c3616 c3334">Web Innovations Co. | City, Country</p>
+          <p class="text-[12px] text-gray-500 mb-[12px] c3645 c3362">Month Year – Month Year</p>
+          <ul class="list-disc list-inside text-[14px] text-gray-700 space-y-[8px] ml-[16px]">
+            <li class="c3677 c3393">Assisted in the development of web applications using JavaScript, Node.js, and Express.js.</li>
+            <li class="c3706 c3420">Contributed to the design and implementation of frontend features using HTML, CSS, and jQuery.</li>
+            <li class="c3735 c3448">Worked with MySQL databases, writing SQL queries and managing data.</li>
+            <li class="c3764 c3476">Participated in daily stand-ups and contributed to agile development processes.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="bg-white p-[16px] rounded-[8px] box-border">
+        <h2 class="text-[24px] font-bold text-gray-700 border-b-[4px] border-blue-500 pb-[8px] mb-[20px] c2871 c2640">Experience</h2>
+        <div class="mb-[24px]">
+          <h3 class="text-[18px] font-semibold text-gray-800 c2908 c2676">Senior Full Stack Developer</h3>
+          <p class="italic text-gray-600 mb-[4px] c2937 c2704">Tech Solutions Inc. | City, Country</p>
+          <p class="text-[12px] text-gray-500 mb-[12px] c2966 c2732">Month Year – Present</p>
+          <ul class="list-disc list-inside text-[14px] text-gray-700 space-y-[8px] ml-[16px]">
+            <li class="c3001 c2766">Led development of scalable microservices using Node.js and Express.js, improving API response times by 25%.</li>
+            <li class="c3030 c2794">Designed and implemented complex database schemas for PostgreSQL and MongoDB, ensuring data integrity and performance.</li>
+            <li class="c3059 c2822">Developed responsive user interfaces with React and Tailwind CSS, enhancing user experience and engagement.</li>
+            <li class="c3088 c2850">Implemented CI/CD pipelines using Docker and Jenkins, automating deployment and reducing release cycles.</li>
+            <li class="c3117 c2878">Mentored junior developers, conducted code reviews, and promoted best practices in software development.</li>
+          </ul>
+        </div>
+        <div class="mb-[24px]">
+          <h3 data-pb-pushed="true" class="text-[18px] font-semibold text-gray-800 c3249 c2992" style="--pb-orig-mt:0px;--pb-mt-active:true;margin-top:157px;--pb-applied-mt:157px;">Full Stack Developer</h3>
+          <p class="italic text-gray-600 mb-[4px] c3278 c3020">Innovatech Ltd. | City, Country</p>
+          <p class="text-[12px] text-gray-500 mb-[12px] c3307 c3048">Month Year – Month Year</p>
+          <ul class="list-disc list-inside text-[14px] text-gray-700 space-y-[8px] ml-[16px]">
+            <li class="c3339 c3079">Built and maintained RESTful APIs using Python with Flask and SQLAlchemy for a client management system.</li>
+            <li class="c3368 c3107">Developed frontend components using Vue.js and Bootstrap, integrating with backend services.</li>
+            <li class="c3397 c3135">Managed cloud infrastructure on AWS, including EC2, S3, and RDS, ensuring high availability.</li>
+            <li class="c3426 c3163">Collaborated with cross-functional teams to define, design, and ship new features.</li>
+            <li class="c3455 c3191">Troubleshot and resolved bugs, improving application stability by 15%.</li>
+          </ul>
+        </div>
+        <div class="mb-[24px]">
+          <h3 class="text-[18px] font-semibold text-gray-800 c3587 c3306">Junior Full Stack Developer</h3>
+          <p class="italic text-gray-600 mb-[4px] c3616 c3334">Web Innovations Co. | City, Country</p>
+          <p class="text-[12px] text-gray-500 mb-[12px] c3645 c3362">Month Year – Month Year</p>
+          <ul class="list-disc list-inside text-[14px] text-gray-700 space-y-[8px] ml-[16px]">
+            <li class="c3677 c3393">Assisted in the development of web applications using JavaScript, Node.js, and Express.js.</li>
+            <li class="c3706 c3420">Contributed to the design and implementation of frontend features using HTML, CSS, and jQuery.</li>
+            <li class="c3735 c3448">Worked with MySQL databases, writing SQL queries and managing data.</li>
+            <li class="c3764 c3476">Participated in daily stand-ups and contributed to agile development processes.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="bg-white p-[16px] rounded-[8px] box-border">
+        <h2 class="text-[24px] font-bold text-gray-700 border-b-[4px] border-blue-500 pb-[8px] mb-[20px] c2871 c2640">Experience</h2>
+        <div class="mb-[24px]">
+          <h3 class="text-[18px] font-semibold text-gray-800 c2908 c2676">Senior Full Stack Developer</h3>
+          <p class="italic text-gray-600 mb-[4px] c2937 c2704">Tech Solutions Inc. | City, Country</p>
+          <p class="text-[12px] text-gray-500 mb-[12px] c2966 c2732">Month Year – Present</p>
+          <ul class="list-disc list-inside text-[14px] text-gray-700 space-y-[8px] ml-[16px]">
+            <li class="c3001 c2766">Led development of scalable microservices using Node.js and Express.js, improving API response times by 25%.</li>
+            <li class="c3030 c2794">Designed and implemented complex database schemas for PostgreSQL and MongoDB, ensuring data integrity and performance.</li>
+            <li class="c3059 c2822">Developed responsive user interfaces with React and Tailwind CSS, enhancing user experience and engagement.</li>
+            <li class="c3088 c2850">Implemented CI/CD pipelines using Docker and Jenkins, automating deployment and reducing release cycles.</li>
+            <li data-pb-pushed="true" class="c3117 c2878" style="--pb-orig-mt:0px;--pb-mt-active:true;margin-top:19.67706298828125px;--pb-applied-mt:19.67706298828125px;">Mentored junior developers, conducted code reviews, and promoted best practices in software development.</li>
+          </ul>
+        </div>
+        <div class="mb-[24px]">
+          <h3 class="text-[18px] font-semibold text-gray-800 c3249 c2992">Full Stack Developer</h3>
+          <p class="italic text-gray-600 mb-[4px] c3278 c3020">Innovatech Ltd. | City, Country</p>
+          <p class="text-[12px] text-gray-500 mb-[12px] c3307 c3048">Month Year – Month Year</p>
+          <ul class="list-disc list-inside text-[14px] text-gray-700 space-y-[8px] ml-[16px]">
+            <li class="c3339 c3079">Built and maintained RESTful APIs using Python with Flask and SQLAlchemy for a client management system.</li>
+            <li class="c3368 c3107">Developed frontend components using Vue.js and Bootstrap, integrating with backend services.</li>
+            <li class="c3397 c3135">Managed cloud infrastructure on AWS, including EC2, S3, and RDS, ensuring high availability.</li>
+            <li class="c3426 c3163">Collaborated with cross-functional teams to define, design, and ship new features.</li>
+            <li class="c3455 c3191">Troubleshot and resolved bugs, improving application stability by 15%.</li>
+          </ul>
+        </div>
+        <div class="mb-[24px]">
+          <h3 class="text-[18px] font-semibold text-gray-800 c3587 c3306">Junior Full Stack Developer</h3>
+          <p class="italic text-gray-600 mb-[4px] c3616 c3334">Web Innovations Co. | City, Country</p>
+          <p class="text-[12px] text-gray-500 mb-[12px] c3645 c3362">Month Year – Month Year</p>
+          <ul class="list-disc list-inside text-[14px] text-gray-700 space-y-[8px] ml-[16px]">
+            <li class="c3677 c3393">Assisted in the development of web applications using JavaScript, Node.js, and Express.js.</li>
+            <li class="c3706 c3420">Contributed to the design and implementation of frontend features using HTML, CSS, and jQuery.</li>
+            <li class="c3735 c3448">Worked with MySQL databases, writing SQL queries and managing data.</li>
+            <li class="c3764 c3476">Participated in daily stand-ups and contributed to agile development processes.</li>
+          </ul>
+        </div>
+      </div>
+      <!-- Projects Section -->
+      <div class="bg-white p-[16px] rounded-[8px] box-border">
+        <h2 class="text-[24px] font-bold text-gray-700 border-b-[4px] border-blue-500 pb-[8px] mb-[20px] c3911 c3606">Projects</h2>
+        <div class="mb-[24px]">
+          <h3 class="text-[18px] font-semibold text-gray-800 c3943 c3637">E-commerce Platform</h3>
+          <p class="italic text-gray-600 mb-[4px] c3972 c3665">Personal Project</p>
+          <p class="text-[12px] text-gray-500 mb-[12px] c4001 c3693">Tech Stack: MERN (MongoDB, Express, React, Node.js), Tailwind CSS</p>
+          <ul class="list-disc list-inside text-[14px] text-gray-700 space-y-[8px] ml-[16px]">
+            <li class="c4033 c3724">Developed a full-fledged e-commerce site with user authentication, product catalog, shopping cart, and payment integration (Stripe API).</li>
+            <li class="c4062 c3752">Implemented admin panel for product management, order tracking, and user management.</li>
+            <li class="c4091 c3780">Deployed on AWS using Docker and Nginx.</li>
+            <li data-pb-pushed="true" class="c4120 c3808" style="--pb-orig-mt:0px;--pb-mt-active:true;margin-top:32.34375px;--pb-applied-mt:32.34375px;">
+              <a href="#" class="text-blue-600 hover:underline c4123 c3812">Link to Project</a> | <a href="#" class="text-blue-600 hover:underline c4163 c3851">GitHub Repo</a>
+            </li>
+          </ul>
+        </div>
+        <div class="mb-[24px]">
+          <h3 class="text-[18px] font-semibold text-gray-800 c4325 c3992">Task Management App</h3>
+          <h3 class="text-[18px] font-semibold text-gray-800 c4325 c3992">Task Management App</h3>
+          <h3 class="text-[18px] font-semibold text-gray-800 c4325 c3992">Task Management App</h3>
+          <p class="italic text-gray-600 mb-[4px] c4354 c4020">University Capstone Project</p>
+          <p class="text-[12px] text-gray-500 mb-[12px] c4383 c4048">Tech Stack: Python (Django), PostgreSQL, React, Bootstrap</p>
+          <ul class="list-disc list-inside text-[14px] text-gray-700 space-y-[8px] ml-[16px]">
+            <li class="c4415 c4079">Built a collaborative task management application allowing teams to create, assign, and track tasks.</li>
+            <li class="c4444 c4107">Features include user roles, project boards, and real-time notifications.</li>
+            <li class="c4473 c4135">Integrated with calendar APIs for scheduling and deadline management.</li>
+            <li class="c4502 c4163">
+              <a href="#" class="text-blue-600 hover:underline c4505 c4167">Link to Project</a> | <a href="#" class="text-blue-600 hover:underline c4545 c4206">GitHub Repo</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`

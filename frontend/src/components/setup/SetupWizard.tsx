@@ -84,7 +84,8 @@ export default function SetupWizard() {
 
   const loadSemesters = async (deptId: string) => {
     const r = await client.get(`/setup/semesters?departmentId=${deptId}`).catch(() => null);
-    setSemesters(r?.data ?? []);
+    const sems = r?.data ?? [];
+    setSemesters(sems.sort((a: any, b: any) => (a.number || 0) - (b.number || 0)));
   };
   const loadSections = async (semId: string) => {
     const r = await client.get(`/setup/sections?semesterId=${semId}`).catch(() => null);

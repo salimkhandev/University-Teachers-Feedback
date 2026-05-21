@@ -41,7 +41,8 @@ export default function Management() {
   const loadSemesters = async (deptId: string) => {
     try {
       const res = await client.get(`/setup/semesters?departmentId=${deptId}`);
-      setSems(res.data);
+      const sortedSems = res.data.sort((a: any, b: any) => (a.number || 0) - (b.number || 0));
+      setSems(sortedSems);
     } catch (err) {
       console.error('Failed to load semesters', err);
     }

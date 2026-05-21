@@ -1,4 +1,4 @@
-import { useState, FormEvent } from 'react';
+import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import client from '../../api/client';
@@ -13,11 +13,17 @@ export default function LoginForm() {
   const [loading,  setLoading]  = useState(false);
 
   const handleSubmit = async (e: FormEvent) => {
+    console.log('[LoginForm] handleSubmit called');
     e.preventDefault();
+    console.log('[LoginForm] Form prevented default');
     setError('');
     setLoading(true);
+    console.log('[LoginForm] Login attempt for username:', username);
+    console.log('[LoginForm] Password length:', password.length);
     try {
+      console.log('[LoginForm] Sending login request to backend...');
       const { data } = await client.post('/auth/login', { username, password });
+      console.log('[LoginForm] Login successful, user:', data.user);
       login({ accessToken: data.accessToken, refreshToken: data.refreshToken }, data.user);
       // Redirect based on role
       const routes: Record<string, string> = {
@@ -25,8 +31,12 @@ export default function LoginForm() {
         teacher: '/teacher',
         student: '/student',
       };
+      console.log('[LoginForm] Redirecting to:', routes[data.user.role]);
       navigate(routes[data.user.role] ?? '/');
     } catch (err: any) {
+      console.error('[LoginForm] Login error:', err);
+      console.error('[LoginForm] Error response:', err.response?.data);
+      console.error('[LoginForm] Error status:', err.response?.status);
       setError(err.response?.data?.error ?? 'Login failed. Please try again.');
     } finally {
       setLoading(false);
@@ -89,7 +99,7 @@ export default function LoginForm() {
           <div className="mt-6 pt-5 border-t border-base">
             <p className="text-xs text-secondary text-center mb-3">Demo credentials</p>
             <div className="grid grid-cols-3 gap-2 text-xs">
-              {[['Admin','admin','admin123'],['Teacher','teacher1','pass123'],['Student','student1','pass123']].map(([role, u, p]) => (
+              {[['Admin','admin','992211sa'],['Teacher','jdoe','992211sa'],['Student','salimkhan','992211sa']].map(([role, u, p]) => (
                 <button key={role} onClick={() => { setUsername(u); setPassword(p); }}
                   className="bg-gray-500/5 hover:bg-gray-500/10 rounded-lg p-2 text-center transition-colors border border-base">
                   <div className="font-semibold text-primary">{role}</div>

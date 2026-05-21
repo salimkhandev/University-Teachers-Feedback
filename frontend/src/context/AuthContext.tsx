@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 
 interface AuthUser {
   id:   string;
@@ -23,13 +23,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Hydrate from localStorage on first load
   useEffect(() => {
+    console.log('[AuthContext] Hydrating auth state from localStorage...');
     const storedToken = localStorage.getItem('accessToken');
     const storedUser  = localStorage.getItem('user');
+    console.log('[AuthContext] Stored token:', storedToken ? 'EXISTS' : 'NOT FOUND');
+    console.log('[AuthContext] Stored user:', storedUser ? 'EXISTS' : 'NOT FOUND');
     if (storedToken && storedUser) {
       setAccessToken(storedToken);
       setUser(JSON.parse(storedUser));
+      console.log('[AuthContext] Auth state restored');
     }
     setIsLoading(false);
+    console.log('[AuthContext] Hydration complete, isLoading:', false);
   }, []);
 
   const login = (tokens: { accessToken: string; refreshToken: string }, userData: AuthUser) => {

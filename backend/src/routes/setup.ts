@@ -228,45 +228,61 @@ router.post('/students/bulk-csv', upload.single('file'), async (req: Request, re
           continue;
         }
         const hashed = await hashPassword(row.password);
-        const existingUser = await User.findOne({ username: row.username });
+        let username = row.username;
+        let cnic = row.cnic;
+        let email = row.email;
+        let name = row.name;
 
+        // Auto-resolve duplicate username by appending random suffix
+        let existingUser = await User.findOne({ username });
         if (existingUser) {
-          // Update existing user details
-          existingUser.name = row.name;
-          existingUser.password = hashed;
-          existingUser.email = row.email;
-          await existingUser.save();
-
-          // Update corresponding student details or create if missing
-          const existingStudent = await Student.findOne({ userId: existingUser._id });
-          if (existingStudent) {
-            let rollNumber = existingStudent.rollNumber;
-            if (existingStudent.sectionId.toString() !== row.sectionId) {
-              rollNumber = await generateRollNumber(row.sectionId);
-            }
-            existingStudent.sectionId = row.sectionId as any;
-            existingStudent.semesterId = row.semesterId as any;
-            existingStudent.rollNumber = rollNumber;
-            existingStudent.cnic = row.cnic;
-            existingStudent.phone = row.phone;
-            await existingStudent.save();
-          } else {
-            const rollNumber = await generateRollNumber(row.sectionId);
-            await Student.create({
-              userId: existingUser._id,
-              sectionId: row.sectionId,
-              semesterId: row.semesterId,
-              rollNumber,
-              cnic: row.cnic,
-              phone: row.phone
-            });
+          let uniqueUsername = username;
+          let isUnique = false;
+          while (!isUnique) {
+            const suffix = Math.floor(100 + Math.random() * 900);
+            uniqueUsername = `${row.username}.${suffix}`;
+            const check = await User.findOne({ username: uniqueUsername });
+            if (!check) isUnique = true;
           }
-        } else {
-          // Create new user and student records
-          const user = await User.create({ name: row.name, username: row.username, password: hashed, role: 'student', email: row.email });
-          const rollNumber = await generateRollNumber(row.sectionId);
-          await Student.create({ userId: user._id, sectionId: row.sectionId, semesterId: row.semesterId, rollNumber, cnic: row.cnic, phone: row.phone });
+          username = uniqueUsername;
+          
+          const suffixParts = username.split('.');
+          const suffix = suffixParts[suffixParts.length - 1];
+          name = `${row.name} (${suffix})`;
+          
+          if (email) {
+            const emailParts = email.split('@');
+            if (emailParts.length === 2) {
+              email = `${emailParts[0]}.${suffix}@${emailParts[1]}`;
+            }
+          }
         }
+
+        // Auto-resolve duplicate CNIC by modifying middle digits
+        if (cnic) {
+          let existingCnic = await Student.findOne({ cnic });
+          if (existingCnic) {
+            let uniqueCnic = cnic;
+            let isUnique = false;
+            while (!isUnique) {
+              const parts = cnic.split('-');
+              if (parts.length === 3) {
+                const middle = Math.floor(1000000 + Math.random() * 9000000);
+                uniqueCnic = `${parts[0]}-${middle}-${parts[2]}`;
+              } else {
+                uniqueCnic = `${cnic}-${Math.floor(10 + Math.random() * 90)}`;
+              }
+              const check = await Student.findOne({ cnic: uniqueCnic });
+              if (!check) isUnique = true;
+            }
+            cnic = uniqueCnic;
+          }
+        }
+
+        // Create new records for the resolved student details
+        const user = await User.create({ name, username, password: hashed, role: 'student', email });
+        const rollNumber = await generateRollNumber(row.sectionId);
+        await Student.create({ userId: user._id, sectionId: row.sectionId, semesterId: row.semesterId, rollNumber, cnic, phone: row.phone });
         inserted++;
       } catch (rowErr: any) {
         const reason = rowErr.code === 11000 ? 'Duplicate CNIC or username' : rowErr.message;

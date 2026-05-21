@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // With Vite proxy, /api goes through localhost:5173 — no CORS issues at all
 const client = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || '/api',
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
 });
 
 client.interceptors.request.use((config) => {
@@ -20,7 +20,7 @@ client.interceptors.response.use(
       original._retry = true;
       try {
         const refreshToken = localStorage.getItem('refreshToken');
-        const apiBase = import.meta.env.VITE_API_URL || '/api';
+        const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
         const { data } = await axios.post(`${apiBase}/auth/refresh-token`, { refreshToken });
         localStorage.setItem('accessToken', data.accessToken);
         original.headers.Authorization = `Bearer ${data.accessToken}`;

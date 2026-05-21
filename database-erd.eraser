@@ -1,0 +1,101 @@
+Department [icon: building, color: blue] {
+  _id string pk
+  name string
+  code string uk
+}
+
+Semester [icon: calendar, color: green] {
+  _id string pk
+  departmentId string fk
+  number int
+  label string
+}
+
+Section [icon: users, color: orange] {
+  _id string pk
+  semesterId string fk
+  name string
+}
+
+Subject [icon: book, color: yellow] {
+  _id string pk
+  sectionId string fk
+  name string
+  code string
+}
+
+User [icon: user, color: purple] {
+  _id string pk
+  username string uk
+  password string
+  role string
+  name string
+  email string
+  createdAt datetime
+}
+
+TeacherAssignment [icon: list, color: pink] {
+  _id string pk
+  teacherId string fk
+  subjectId string fk
+  sectionId string fk
+  semesterId string fk
+}
+
+Student [icon: user-check, color: gray] {
+  _id string pk
+  userId string fk
+  sectionId string fk
+  semesterId string fk
+  rollNumber string uk
+  cnic string uk
+  phone string
+}
+
+Feedback [icon: heart, color: red] {
+  _id string pk
+  studentId string fk
+  assignmentId string fk
+  rating int
+  comment string
+  version int
+  createdAt datetime
+  updatedAt datetime
+}
+
+AISummary [icon: cpu, color: purple] {
+  _id string pk
+  teacherId string fk uk
+  summaryText string
+  feedbackCount int
+  generatedAt datetime
+}
+
+ChatSession [icon: message-circle, color: blue] {
+  _id string pk
+  teacherId string fk uk
+  messages string
+}
+
+AISetting [icon: settings, color: gray] {
+  _id string pk
+  selectedModel string
+  keys string
+  createdAt datetime
+  updatedAt datetime
+}
+
+Department._id < Semester.departmentId
+Semester._id < Section.semesterId
+Section._id < Subject.sectionId
+User._id < TeacherAssignment.teacherId
+Subject._id < TeacherAssignment.subjectId
+Section._id < TeacherAssignment.sectionId
+Semester._id < TeacherAssignment.semesterId
+User._id < Student.userId
+Section._id < Student.sectionId
+Semester._id < Student.semesterId
+Student._id < Feedback.studentId
+TeacherAssignment._id < Feedback.assignmentId
+User._id - AISummary.teacherId
+User._id - ChatSession.teacherId

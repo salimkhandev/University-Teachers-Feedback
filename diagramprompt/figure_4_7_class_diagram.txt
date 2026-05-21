@@ -1,0 +1,98 @@
+Figure 4.7: Database Schema Class Diagram
+
+Create a professional UML Class Diagram showing the Mongoose database schema for a University Teachers Feedback System. Style should mimic the reference ERD/class diagram with class boxes showing fields, data types, and relationships. Professional color scheme (blues, grays, whites).
+
+Classes (Rectangles with three sections):
+
+User Class
+- Fields:
+  - username: String (unique)
+  - password: String (hashed)
+  - role: Enum (admin, teacher, student)
+  - name: String
+  - email: String
+  - createdAt: Date
+- Methods: comparePassword()
+
+Department Class
+- Fields:
+  - name: String
+  - code: String (unique)
+
+Semester Class
+- Fields:
+  - departmentId: ObjectId (FK to Department)
+  - number: Number
+  - label: String
+
+Section Class
+- Fields:
+  - semesterId: ObjectId (FK to Semester)
+  - name: String
+
+Subject Class
+- Fields:
+  - sectionId: ObjectId (FK to Section)
+  - name: String
+  - code: String
+
+TeacherAssignment Class
+- Fields:
+  - teacherId: ObjectId (FK to User)
+  - subjectId: ObjectId (FK to Subject)
+  - sectionId: ObjectId (FK to Section)
+  - semesterId: ObjectId (FK to Semester)
+
+Student Class
+- Fields:
+  - userId: ObjectId (FK to User)
+  - sectionId: ObjectId (FK to Section)
+  - semesterId: ObjectId (FK to Semester)
+  - rollNumber: String (auto-generated)
+  - cnic: String (unique)
+  - phone: String
+
+Feedback Class
+- Fields:
+  - studentId: ObjectId (FK to Student)
+  - assignmentId: ObjectId (FK to TeacherAssignment)
+  - rating: Number (1-10)
+  - comment: String
+  - version: Number
+  - createdAt: Date
+
+AISummary Class
+- Fields:
+  - teacherId: ObjectId (FK to User)
+  - summaryText: String
+  - feedbackCount: Number
+  - lastUpdated: Date
+
+ChatSession Class
+- Fields:
+  - teacherId: ObjectId (FK to User)
+  - messages: Array (Object)
+  - createdAt: Date
+
+AISettings Class
+- Fields:
+  - selectedModel: String
+  - keys: Array (Object)
+
+Relationships (Lines with cardinality):
+- User 1:1 Student
+- User 1:N TeacherAssignment
+- Department 1:N Semester
+- Semester 1:N Section
+- Section 1:N Subject
+- Section 1:N Student
+- Subject 1:N TeacherAssignment
+- Teacher 1:N TeacherAssignment
+- TeacherAssignment 1:N Feedback
+- Student 1:N Feedback
+- Teacher 1:1 AISummary
+- Teacher 1:N ChatSession
+
+Layout: Hierarchical with User at top, Department→Semester→Section→Subject chain on left, Student→Feedback chain on right.
+
+Style: Professional class diagram with field types, primary keys (underlined), foreign keys, relationship lines with cardinality, and clear class boundaries.

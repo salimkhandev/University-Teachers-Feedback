@@ -1,0 +1,62 @@
+Figure 4.4: Entity Relationship Diagram (ERD)
+
+Create a professional Entity Relationship Diagram for a University Teachers Feedback System database. Style should mimic the reference ERD with entity boxes, relationship lines with cardinality notation (1, N, M), and professional color scheme (blues, grays, whites).
+
+Entities (Rectangles with fields):
+
+User (central entity)
+- Fields: _id, username, password, role, name, email, createdAt
+- Relationships: One-to-one with Student, One-to-many with TeacherAssignments
+
+Student
+- Fields: _id, userId, sectionId, semesterId, rollNumber, cnic, phone
+- Relationships: Many-to-one with User, Many-to-one with Section, Many-to-one with Semester, One-to-many with Feedback
+
+Teacher
+- Fields: _id, userId, email
+- Relationships: Many-to-one with User, One-to-many with TeacherAssignments, One-to-one with AISummary, One-to-many with ChatSession
+
+Department
+- Fields: _id, name, code
+- Relationships: One-to-many with Semester
+
+Semester
+- Fields: _id, departmentId, number, label
+- Relationships: Many-to-one with Department, One-to-many with Section
+
+Section
+- Fields: _id, semesterId, name
+- Relationships: Many-to-one with Semester, One-to-many with Student, One-to-many with Subject
+
+Subject
+- Fields: _id, sectionId, name, code
+- Relationships: Many-to-one with Section, One-to-many with TeacherAssignment
+
+TeacherAssignment
+- Fields: _id, teacherId, subjectId, sectionId, semesterId
+- Relationships: Many-to-one with Teacher, Many-to-one with Subject, Many-to-one with Section, Many-to-one with Semester, One-to-many with Feedback
+
+Feedback
+- Fields: _id, studentId, assignmentId, rating, comment, version, createdAt
+- Relationships: Many-to-one with Student, Many-to-one with TeacherAssignment
+
+AISummary
+- Fields: _id, teacherId, summaryText, feedbackCount, lastUpdated
+- Relationships: One-to-one with Teacher
+
+ChatSession
+- Fields: _id, teacherId, messages, createdAt
+- Relationships: Many-to-one with Teacher
+
+AISettings
+- Fields: _id, selectedModel, keys (array)
+- Relationships: Singleton configuration entity
+
+Relationship Notation:
+- 1 (one)
+- N (many)
+- M (many, many-to-many)
+
+Layout: Hierarchical with User at center, Department→Semester→Section→Subject chain on left, Teacher→TeacherAssignment→Feedback chain on right.
+
+Style: Professional ERD with entity boxes showing primary keys (underlined), foreign keys, relationship lines with cardinality markers, and clear field listings.

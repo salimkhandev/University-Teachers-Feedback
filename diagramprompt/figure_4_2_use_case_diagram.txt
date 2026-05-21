@@ -1,0 +1,41 @@
+Figure 4.2: System Use-Case Diagram
+
+Create a professional UML Use-Case diagram for a University Teachers Feedback System. Style should mimic standard UML use-case diagrams with stick figure actors, ovals for use cases, and connecting lines. Professional color scheme (blues, grays).
+
+Actors (Stick Figures):
+- Student (left side)
+- Teacher (center)
+- Administrator (right side)
+
+Use Cases (Ovals):
+
+Student Use Cases:
+- Login
+- View Teachers
+- Submit Feedback
+- Edit Feedback
+- Logout
+
+Teacher Use Cases:
+- Login
+- View Ratings
+- View AI Summary
+- Chat with AI
+- Logout
+
+Administrator Use Cases:
+- Login
+- View Rankings
+- Track Students
+- Manage Users
+- Configure AI Settings
+- Logout
+
+Connections:
+- Lines connecting each actor to their respective use cases
+- "include" relationships where appropriate (e.g., Login included in all other use cases)
+- System boundary rectangle enclosing all use cases
+
+Layout: Actors on the outside, use cases inside system boundary. Group use cases by actor proximity.
+
+Style: Clean UML use-case diagram with standard notation, clear labels, professional colors (light blue for use cases, dark blue for actors).

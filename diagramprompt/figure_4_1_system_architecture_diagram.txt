@@ -1,0 +1,24 @@
+Figure 4.1: System Architecture Diagram
+
+Create a professional three-tier system architecture diagram for a University Teachers Feedback System. Style should mimic technical software architecture diagrams with clean boxes, arrows, and professional color scheme (blues, grays, whites). The diagram should show:
+
+Components:
+- Frontend Layer: React/Vite SPA box with label "Frontend (React/Vite)" - includes icons for React, Vite, TailwindCSS
+- Backend API Layer: Node.js/Express box with label "Backend API (Node.js/Express)" - includes icons for Node.js, Express, JWT
+- Database Layer: MongoDB Atlas box with label "Database (MongoDB Atlas)" - includes MongoDB icon
+- External Services: Google Gemini AI box with label "AI Service (Google Gemini)" - includes AI icon
+
+Connections:
+- Arrow from User/Browser → Frontend (HTTPS)
+- Arrow from Frontend → Backend API (HTTPS with JWT authentication)
+- Arrow from Backend API → MongoDB Atlas (Database connection)
+- Arrow from Backend API → Google Gemini AI (API calls)
+
+Security Layers:
+- JWT Authentication layer between Frontend and Backend
+- Role-Based Access Control (RBAC) label near Backend
+- SSL/TLS encryption labels on all connections
+
+Layout: Horizontal flow from left to right: User → Frontend → Backend → Database/AI Services
+
+Style: Professional software architecture diagram with rounded rectangles, clear typography, technical icons, and subtle gradients. Use blue for frontend, green for backend, orange for database, purple for AI services.

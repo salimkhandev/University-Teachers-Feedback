@@ -1,0 +1,33 @@
+Figure 4.3: Data Flow Diagram (DFD Level 1)
+
+Create a professional Level 1 Data Flow Diagram for a University Teachers Feedback System. Style should mimic technical DFD diagrams with rounded rectangles for processes, parallel lines for data stores, open rectangles for external entities, and arrows for data flow. Professional color scheme (blues, greens, grays).
+
+External Entities (Open Rectangles):
+- Student Actor (left)
+- Teacher Actor (right)
+
+Processes (Rounded Rectangles):
+- Login Process (authentication)
+- Student Dashboard (view assignments)
+- Feedback System (submit feedback)
+- Teacher Dashboard (retrieve ratings)
+- AI Summary Service (generate summaries)
+
+Data Stores (Parallel Lines):
+- MongoDB Database (central storage)
+
+Data Flow (Arrows with labels):
+- Student → Login Process: "credentials"
+- Login Process → Student Dashboard: "session token"
+- Student Dashboard → Feedback System: "teacher selection"
+- Student → Feedback System: "rating, comment"
+- Feedback System → MongoDB Database: "feedback data"
+- Teacher Dashboard → MongoDB Database: "query ratings"
+- MongoDB Database → Teacher Dashboard: "rating data"
+- Teacher Dashboard → AI Summary Service: "feedback data"
+- AI Summary Service → MongoDB Database: "cached summary"
+- AI Summary Service → Teacher Dashboard: "AI summary"
+
+Layout: Left-to-right flow with Student on left, Teacher on right, Database at bottom center.
+
+Style: Professional DFD with clear process boundaries, labeled data flows, and distinct visual hierarchy for entities, processes, and stores.

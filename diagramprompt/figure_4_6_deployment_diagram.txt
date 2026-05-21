@@ -1,0 +1,39 @@
+Figure 4.6: Deployment Diagram
+
+Create a professional UML Deployment Diagram for a University Teachers Feedback System. Style should mimic standard UML deployment diagrams with 3D boxes for nodes, rectangles for components, and arrows for communication. Professional color scheme (blues, greens, oranges, grays).
+
+Nodes (3D Boxes):
+
+User Node
+- Component: Web Browser
+- Label: "User Device"
+
+Frontend Deployment Node
+- Platform: Vercel (Static Site)
+- Component: React SPA
+- Label: "Frontend (Vercel)"
+
+Backend Deployment Node
+- Platform: Vercel (Serverless Functions)
+- Component: Node.js Express API
+- Label: "Backend API (Vercel)"
+
+Database Node
+- Platform: MongoDB Atlas
+- Component: MongoDB Database
+- Label: "Database (MongoDB Atlas)"
+
+External Service Node
+- Platform: Google Cloud
+- Component: Gemini AI API
+- Label: "AI Service (Google Gemini)"
+
+Communication (Arrows with labels):
+- User Device → Frontend: "HTTPS"
+- Frontend → Backend API: "HTTPS (with JWT)"
+- Backend API → Database: "MongoDB Connection"
+- Backend API → AI Service: "HTTPS API Calls"
+
+Layout: Left-to-right flow: User Device → Frontend → Backend → Database/AI Services
+
+Style: Professional deployment diagram with 3D node representations, component icons, clear communication protocols, and cloud platform labels.

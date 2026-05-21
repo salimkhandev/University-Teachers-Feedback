@@ -1,0 +1,52 @@
+Figure 4.5: Activity Diagram (Feedback Submission)
+
+Create a professional UML Activity Diagram for the Feedback Submission process in a University Teachers Feedback System. Style should mimic standard UML activity diagrams with rounded rectangles for activities, diamonds for decisions, and arrows for flow. Professional color scheme (blues, greens, grays).
+
+Activities (Rounded Rectangles):
+- Start
+- Login
+- Authentication
+- View Dashboard
+- Select Teacher
+- Open Feedback Form
+- Adjust Rating Slider
+- Enter Comment
+- Click Submit
+- Validate Input
+- Save to Database
+- Update Progress
+- Display Success
+- End
+
+Decisions (Diamonds):
+- "Authentication Successful?" (Yes → View Dashboard, No → Login)
+- "Form Valid?" (Yes → Save to Database, No → Open Feedback Form)
+- "Save Successful?" (Yes → Update Progress, No → Display Error)
+
+Flow (Arrows):
+- Start → Login
+- Login → Authentication
+- Authentication → Decision: "Authentication Successful?"
+- Decision (Yes) → View Dashboard
+- Decision (No) → Login
+- View Dashboard → Select Teacher
+- Select Teacher → Open Feedback Form
+- Open Feedback Form → Adjust Rating Slider
+- Adjust Rating Slider → Enter Comment
+- Enter Comment → Click Submit
+- Click Submit → Validate Input
+- Validate Input → Decision: "Form Valid?"
+- Decision (Yes) → Save to Database
+- Decision (No) → Open Feedback Form
+- Save to Database → Decision: "Save Successful?"
+- Decision (Yes) → Update Progress
+- Decision (No) → Display Error
+- Update Progress → Display Success
+- Display Success → End
+- Display Error → Open Feedback Form
+
+Swimlanes: None (single actor process)
+
+Layout: Top-to-bottom flow with clear decision branches.
+
+Style: Professional activity diagram with standard UML notation, clear activity labels, and distinct decision diamonds.

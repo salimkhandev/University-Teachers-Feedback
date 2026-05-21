@@ -1,0 +1,32 @@
+General Styling Instructions for All Diagrams
+
+Color Palette:
+- Primary Blue: #2563EB (for main components)
+- Secondary Blue: #3B82F6 (for secondary elements)
+- Green: #10B981 (for success/positive elements)
+- Orange: #F59E0B (for databases/storage)
+- Purple: #8B5CF6 (for AI/external services)
+- Gray: #6B7280 (for neutral elements)
+- White: #FFFFFF (for backgrounds)
+- Light Gray: #F3F4F6 (for secondary backgrounds)
+
+Typography:
+- Sans-serif fonts (Arial, Helvetica, or similar)
+- Clear, readable sizes (12-14pt for labels, 10-12pt for details)
+- Bold for headers/primary labels
+- Regular for secondary text
+
+Visual Elements:
+- Rounded corners (4-8px) for boxes
+- Subtle gradients for depth
+- Clear borders (1-2px)
+- Consistent spacing (8-16px margins)
+- Professional icons where appropriate
+- High contrast for readability
+
+Technical Accuracy:
+- All relationships must match the actual system architecture
+- Correct cardinality notation (1, N, M)
+- Proper UML notation for each diagram type
+- Accurate field names and data types
+- Correct flow directions and connections

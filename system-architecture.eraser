@@ -1,0 +1,26 @@
+ClientApp [icon: browser, color: blue] { role string tech string }
+StudentPortal [icon: user, color: green] { role string tech string }
+TeacherPortal [icon: users, color: orange] { role string tech string }
+AdminPortal [icon: lock, color: red] { role string tech string }
+AuthService [icon: key, color: purple] { role string tech string }
+ApiGateway [icon: server, color: yellow] { role string tech string }
+AiService [icon: cpu, color: pink] { role string tech string }
+Database [icon: database, color: gray] { role string tech string }
+VercelHosting [icon: cloud, color: blue] { role string tech string }
+
+ClientApp > StudentPortal
+ClientApp > TeacherPortal
+ClientApp > AdminPortal
+StudentPortal > AuthService
+TeacherPortal > AuthService
+AdminPortal > AuthService
+StudentPortal > ApiGateway
+TeacherPortal > ApiGateway
+AdminPortal > ApiGateway
+ApiGateway > AiService
+ApiGateway > Database
+AiService > Database
+StudentPortal > VercelHosting
+TeacherPortal > VercelHosting
+AdminPortal > VercelHosting
+ApiGateway > VercelHosting

@@ -20,7 +20,8 @@ client.interceptors.response.use(
       original._retry = true;
       try {
         const refreshToken = localStorage.getItem('refreshToken');
-        const { data } = await axios.post('/api/auth/refresh-token', { refreshToken });
+        const apiBase = import.meta.env.VITE_API_URL || '/api';
+        const { data } = await axios.post(`${apiBase}/auth/refresh-token`, { refreshToken });
         localStorage.setItem('accessToken', data.accessToken);
         original.headers.Authorization = `Bearer ${data.accessToken}`;
         return client(original);

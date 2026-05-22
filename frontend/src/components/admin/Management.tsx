@@ -79,7 +79,7 @@ export default function Management() {
           <p className="text-xs text-secondary">Manage teacher and student accounts</p>
         </div>
         
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2">
           {roleFilter === 'student' && (
             <>
               <select 
@@ -107,7 +107,7 @@ export default function Management() {
             </>
           )}
 
-          <div className="flex bg-gray-500/5 rounded p-1 border border-base ml-2">
+          <div className="flex bg-gray-500/5 rounded p-1 border border-base sm:ml-2">
             <button 
               className={`px-4 py-1.5 text-xs font-medium rounded transition-colors ${roleFilter === 'student' ? 'bg-indigo-600 text-white' : 'text-secondary hover:text-primary'}`}
               onClick={() => setRoleFilter('student')}

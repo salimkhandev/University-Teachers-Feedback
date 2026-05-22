@@ -84,15 +84,15 @@ export default function TeacherRankingTable({ rankings }: Props) {
       {rankings.length === 0 ? (
         <p className="text-gray-500 text-sm">No teacher data available.</p>
       ) : (
-        <div className="table-wrap">
-          <table className="w-full text-sm min-w-[320px]">
+        <div className="table-wrap overflow-x-hidden">
+          <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-base text-left">
-                <th className="pb-3 text-secondary font-medium w-10">#</th>
+                <th className="pb-3 text-secondary font-medium w-8 sm:w-10">#</th>
                 <th className="pb-3 text-secondary font-medium">Teacher</th>
-                <th className="pb-3 text-secondary font-medium text-right">Avg</th>
-                <th className="pb-3 text-secondary font-medium text-right hidden sm:table-cell">Feedback</th>
-                <th className="pb-3 w-10"></th>
+                <th className="pb-3 text-secondary font-medium text-right whitespace-nowrap">Avg</th>
+                <th className="pb-3 text-secondary font-medium text-right whitespace-nowrap hidden sm:table-cell">Feedback</th>
+                <th className="pb-3 w-8 sm:w-10"></th>
               </tr>
             </thead>
             <tbody className="divide-y border-base">
@@ -132,7 +132,8 @@ export default function TeacherRankingTable({ rankings }: Props) {
                   
                   {expanded === r.teacherId && (
                     <tr>
-                      <td colSpan={5} className="py-4 px-4 bg-gray-500/5 rounded-lg border-x border-base">
+                      <td colSpan={5} className="py-4 px-2 sm:px-4 bg-gray-500/5 rounded-lg border-x border-base max-w-0">
+                        <div className="w-full overflow-hidden space-y-4">
                         <div className="text-xs font-semibold text-brand-400 uppercase tracking-widest mb-2 flex items-center gap-2">
                           <span className="w-2 h-2 rounded-full bg-brand-500 animate-pulse" />
                           AI Intelligence Report
@@ -236,10 +237,11 @@ export default function TeacherRankingTable({ rankings }: Props) {
                                  </>
                                ) : '⚡ Generate Report'}
                             </button>
-                          </div>
-                        )}
-                      </td>
-                    </tr>
+                           </div>
+                         )}
+                        </div>
+                       </td>
+                     </tr>
                   )}
                 </React.Fragment>
               )})}

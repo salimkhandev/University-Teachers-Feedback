@@ -789,6 +789,22 @@
         <span class="block">This ensures no orphaned records remain in the database after user deletion.</span>
         </p>
 
+        <h4 class="text-[16px] font-semibold text-gray-800 mb-[8px] mt-[20px]">5.1.11 Teacher Ranking Algorithm & Admin Report Logic</h4>
+        <p class="text-[14px] text-gray-800 mb-[16px] leading-relaxed">
+        <span class="block mb-[8px]"><strong>Teacher Rankings (GET /api/admin/teachers/rankings):</strong> The ranking algorithm computes teacher performance by aggregating all feedback data per teacher. The backend queries all users with role "teacher", finds their TeacherAssignment records, collects all associated Feedback records, averages the rating values to produce averageRating, and sorts descending by averageRating. The frontend displays these with color-coded ratings (green ≥7, yellow 5-6.9, red <5), medal emojis for top 3, and an expandable AI Intelligence Report with chat functionality.</span>
+        <span class="block mb-[8px]"><strong>Admin Report Generation (POST /admin/report/generate/:teacherId):</strong> This endpoint triggers AI summary generation by calling generateAndCacheSummary() from the summary service. It fetches the teacher's assignments, gathers associated feedback comments and ratings, constructs a Gemini prompt including the average rating and response count, sends it via runWithGemini with multi-key rotation, and caches the result with the current feedback count for instant future retrieval.</span>
+        <span class="block"><strong>Admin Chat with AI (POST /admin/report/chat/:teacherId):</strong> Enables administrators to have contextual AI conversations about any teacher's feedback. It fetches assignments and feedback, calculates the average rating, and constructs a system prompt instructing the AI to act as an "expert University HR Performance Evaluator." The context includes formatted student comments and ratings. If chat history exceeds 3000 characters, summarizeChatHistory() compacts it into a dense paragraph. Responses use Markdown formatting (bold, bullet points) rendered by the FormattedMessage component.</span>
+        </p>
+
+        <h4 class="text-[16px] font-semibold text-gray-800 mb-[8px] mt-[20px]">5.1.12 Frontend API Client Configuration</h4>
+        <p class="text-[14px] text-gray-800 mb-[16px] leading-relaxed">
+        <span class="block mb-[8px]">The frontend API client (src/api/client.ts) is built on Axios with the following configuration:</span>
+        <span class="block mb-[4px]">1. <strong>Base URL:</strong> Configured via VITE_API_URL environment variable, defaulting to the production API at https://studentfeedbackicp-api.vercel.app/api.</span>
+        <span class="block mb-[4px]">2. <strong>Request Interceptor:</strong> Automatically attaches the JWT access token from localStorage as a Bearer token in the Authorization header for every request.</span>
+        <span class="block mb-[4px]">3. <strong>Response Interceptor (Token Refresh):</strong> On 401 responses, the interceptor checks if the request was already retried. If not, it sends the refresh token to /auth/refresh-token, stores the new access token, and retries the original request. If the refresh fails (token expired/invalid), it clears localStorage and redirects to /login.</span>
+        <span class="block"><strong>FormattedMessage Component (src/components/common/FormattedMessage.tsx):</strong> This component renders AI responses containing Markdown-like formatting. It splits text by newlines, detects bullet points (lines starting with "- " or "* ") and wraps them in <ul> lists, detects and renders bold text (**text**) as <strong> tags, and wraps remaining lines in <p> tags with whitespace preservation. This gives the AI responses a clean, formatted appearance without requiring a full Markdown parser.</span>
+        </p>
+
         <h3 class="text-[18px] font-semibold text-gray-900 mb-[12px] mt-[24px]">5.2 Graphical User Interface (GUI)</h3>
         
         <h4 class="text-[16px] font-semibold text-gray-800 mb-[8px]">5.2.1 Login Interface with Demo Credentials</h4>

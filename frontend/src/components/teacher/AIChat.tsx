@@ -22,15 +22,84 @@ export default function AIChat() {
   const send = async () => {
     if (!input.trim() || loading) return;
     const msg = input.trim();
-    setMessages(prev => [...prev, { role: 'user', content: msg }]);
+    setMessages(prev => [
+      ...prev,
+      { role: 'user', content: msg },
+      { role: 'model', content: '' }
+    ]);
     setInput('');
     setLoading(true); setError('');
+
     try {
-      const { data } = await client.post('/teacher/chat', { message: msg });
-      setMessages(prev => [...prev, { role: 'model', content: data.reply }]);
+      const apiBase = client.defaults.baseURL || '/api';
+      const token = localStorage.getItem('accessToken');
+      const response = await fetch(`${apiBase}/teacher/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ message: msg }),
+      });
+
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || `Request failed with status ${response.status}`);
+      }
+
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (reader) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed.startsWith('data: ')) continue;
+          
+          let parsed;
+          try {
+            parsed = JSON.parse(trimmed.slice(6));
+          } catch (e) {
+            console.error('Failed to parse SSE line:', trimmed, e);
+            continue;
+          }
+
+          if (parsed.error) {
+            throw new Error(parsed.error);
+          }
+
+          if (parsed.chunk) {
+            setMessages(prev => {
+              const updated = [...prev];
+              const last = updated[updated.length - 1];
+              if (last && last.role === 'model') {
+                last.content += parsed.chunk;
+              }
+              return updated;
+            });
+          }
+        }
+      }
     } catch (err: any) {
-      setError(err.response?.data?.error ?? 'Failed to get response');
-    } finally { setLoading(false); }
+      setError(err.message || 'Failed to get response');
+      setMessages(prev => {
+        const updated = [...prev];
+        const last = updated[updated.length - 1];
+        if (last && last.role === 'model' && last.content === '') {
+          return updated.slice(0, -1);
+        }
+        return updated;
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

@@ -44,35 +44,122 @@ export default function TeacherRankingTable({ rankings }: Props) {
     const text = chatInputs[teacherId]?.trim();
     if (!text) return;
 
-    // Appending locally first for instantaneous UI update
+    // Reset input
     setChatInputs(prev => ({ ...prev, [teacherId]: '' }));
+    
+    // Add user message & empty model placeholder message
     setChatHistories(prev => {
       const h = prev[teacherId] || [];
-      return { ...prev, [teacherId]: [...h, { role: 'user', content: text }] };
+      return {
+        ...prev,
+        [teacherId]: [
+          ...h,
+          { role: 'user', content: text },
+          { role: 'model', content: '' }
+        ]
+      };
     });
     setChatLoading(prev => ({ ...prev, [teacherId]: true }));
 
+    const historyToSend = backendHistories[teacherId] || chatHistories[teacherId] || [];
+    let fullReply = '';
+    let finalCompacted = null;
+
     try {
-      const historyToSend = backendHistories[teacherId] || chatHistories[teacherId] || [];
-      const res = await client.post(`/admin/report/chat/${teacherId}`, {
-        message: text,
-        history: historyToSend
-      });
+      const apiBase = client.defaults.baseURL || '/api';
+      const token = localStorage.getItem('accessToken');
       
-      setChatHistories(prev => {
-        const h = prev[teacherId] || [];
-        return { ...prev, [teacherId]: [...h, { role: 'model', content: res.data.reply }] };
+      const response = await fetch(`${apiBase}/admin/report/chat/${teacherId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          message: text,
+          history: historyToSend
+        }),
       });
+
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || `Request failed with status ${response.status}`);
+      }
+
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (reader) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed.startsWith('data: ')) continue;
+
+          let parsed;
+          try {
+            parsed = JSON.parse(trimmed.slice(6));
+          } catch (e) {
+            console.error('Failed to parse SSE line:', trimmed, e);
+            continue;
+          }
+
+          if (parsed.error) {
+            throw new Error(parsed.error);
+          }
+
+          if (parsed.chunk) {
+            fullReply += parsed.chunk;
+            setChatHistories(prev => {
+              const h = prev[teacherId] || [];
+              const updated = [...h];
+              const last = updated[updated.length - 1];
+              if (last && last.role === 'model') {
+                last.content = fullReply;
+              }
+              return { ...prev, [teacherId]: updated };
+            });
+          }
+
+          if (parsed.done) {
+            if (parsed.compactedHistory) {
+              finalCompacted = parsed.compactedHistory;
+            }
+          }
+        }
+      }
 
       // Update the invisible backend history array (handling potential compaction)
       setBackendHistories(prev => {
-        const base = res.data.compactedHistory || historyToSend;
-        return { ...prev, [teacherId]: [...base, { role: 'user', content: text }, { role: 'model', content: res.data.reply }] };
+        const base = finalCompacted || historyToSend;
+        return {
+          ...prev,
+          [teacherId]: [
+            ...base,
+            { role: 'user', content: text },
+            { role: 'model', content: fullReply }
+          ]
+        };
       });
 
     } catch (err: any) {
-      alert(err.response?.data?.error ?? 'Failed to send message to AI.');
-      // Rollback last message optionally
+      alert(err.message || 'Failed to send message to AI.');
+      // Rollback last empty model message & user message on total failure
+      setChatHistories(prev => {
+        const h = prev[teacherId] || [];
+        const updated = [...h];
+        const last = updated[updated.length - 1];
+        if (last && last.role === 'model' && last.content === '') {
+          return { ...prev, [teacherId]: updated.slice(0, -2) };
+        }
+        return prev;
+      });
     } finally {
       setChatLoading(prev => ({ ...prev, [teacherId]: false }));
     }

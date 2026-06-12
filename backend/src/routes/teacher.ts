@@ -278,13 +278,35 @@ Answer in teacher mode. Coach the teacher directly, suggest practical improvemen
       recentHistory = recentHistory.slice(-5);
     }
 
-    const reply = await chatWithTeacher(recentHistory, message, context);
+    const result = await chatWithTeacher(recentHistory, message, context);
 
-    session.messages.push({ role: 'model', content: reply, timestamp: new Date() });
+    res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
+    res.setHeader('Cache-Control', 'no-cache, no-transform');
+    res.setHeader('Connection', 'keep-alive');
+    res.flushHeaders?.();
+
+    let fullReply = '';
+    for await (const chunk of result.stream) {
+      const text = chunk.text();
+      fullReply += text;
+      res.write(`data: ${JSON.stringify({ chunk: text })}\n\n`);
+    }
+
+    session.messages.push({ role: 'model', content: fullReply, timestamp: new Date() });
     await session.save();
 
-    res.json({ reply });
+    res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
+    res.end();
   } catch (err: any) {
+    if (res.headersSent) {
+      try {
+        res.write(`data: ${JSON.stringify({ error: err?.message || 'Streaming error' })}\n\n`);
+        res.end();
+      } catch (streamErr) {
+        console.error('[teacher/chat stream error handling]', streamErr);
+      }
+      return;
+    }
     if (String(err?.message || '').includes('No Gemini API key configured')) {
       res.status(400).json({ error: 'AI key is not configured. Ask admin to add a Gemini key in Admin > AI Settings.' });
       return;

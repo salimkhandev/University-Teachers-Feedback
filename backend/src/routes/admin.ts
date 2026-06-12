@@ -417,10 +417,32 @@ router.post('/report/chat/:teacherId', async (req: Request, res: Response): Prom
     }
 
     // 4. Send to Gemini using the dense/recent history + the new dedicated Admin context function
-    const reply = await chatWithAdmin(recentHistory, message, context);
+    const result = await chatWithAdmin(recentHistory, message, context);
     
-    res.json({ reply, compactedHistory });
+    res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
+    res.setHeader('Cache-Control', 'no-cache, no-transform');
+    res.setHeader('Connection', 'keep-alive');
+    res.flushHeaders?.();
+
+    let fullReply = '';
+    for await (const chunk of result.stream) {
+      const text = chunk.text();
+      fullReply += text;
+      res.write(`data: ${JSON.stringify({ chunk: text })}\n\n`);
+    }
+
+    res.write(`data: ${JSON.stringify({ done: true, compactedHistory })}\n\n`);
+    res.end();
   } catch (err: any) {
+    if (res.headersSent) {
+      try {
+        res.write(`data: ${JSON.stringify({ error: err?.message || 'Streaming error' })}\n\n`);
+        res.end();
+      } catch (streamErr) {
+        console.error('[admin/report/chat stream error handling]', streamErr);
+      }
+      return;
+    }
     if (String(err?.message || '').includes('No Gemini API key configured')) {
       res.status(400).json({ error: 'AI key is not configured. Add a Gemini key in AI Settings.' });
       return;

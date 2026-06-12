@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenerativeAI, GenerateContentStreamResult } from '@google/generative-ai';
 import AISettings, { GeminiModelOption } from '../models/AISettings';
 
 type RuntimeKey = {
@@ -144,7 +144,7 @@ export async function chatWithTeacher(
   messages: { role: string; content: string }[],
   newMessage: string,
   context: string
-): Promise<string> {
+): Promise<GenerateContentStreamResult> {
   const history = messages.map((m) => ({
     role: m.role as 'user' | 'model',
     parts: [{ text: m.content }],
@@ -164,29 +164,32 @@ MODE: TEACHER SUPPORT
 - Use chat history only as silent background context.
 - Do not mention previous messages/history unless the user explicitly asks for recap/comparison.`;
 
+  // Start the chat session and send the message stream
   const result = await runWithGemini(systemInstruction, async (teacherModel) => {
     const chat = teacherModel.startChat({ history });
-    return chat.sendMessage(newMessage);
+    return chat.sendMessageStream(newMessage);
   });
-  return result.response.text();
+  return result;
 }
 
 export async function chatWithAdmin(
   messages: { role: string; content: string }[],
   newMessage: string,
   context: string
-): Promise<string> {
+): Promise<GenerateContentStreamResult> {
   const history = messages.map((m) => ({
     role: m.role as 'user' | 'model',
     parts: [{ text: m.content }],
   }));
 
   const systemInstruction = context + "\n\nCRITICAL RULES:\n- Return a highly concise, to-the-point reply. Keep it very short.\n- Prioritize the latest user question over prior chat turns.\n- Treat prior history as background only.\n- Do not mention previous messages unless the admin explicitly asks for recap/comparison.";
+  
+  // Start the chat session and send the message stream
   const result = await runWithGemini(systemInstruction, async (adminModel) => {
     const chat = adminModel.startChat({ history });
-    return chat.sendMessage(newMessage);
+    return chat.sendMessageStream(newMessage);
   });
-  return result.response.text();
+  return result;
 }
 
 export async function summarizeChatHistory(

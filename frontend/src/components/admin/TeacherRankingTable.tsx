@@ -63,7 +63,7 @@ export default function TeacherRankingTable({ rankings }: Props) {
 
     const historyToSend = backendHistories[teacherId] || chatHistories[teacherId] || [];
     let fullReply = '';
-    let finalCompacted = null;
+    let finalCompacted: { role: string; content: string }[] | null = null;
 
     try {
       const apiBase = client.defaults.baseURL || '/api';

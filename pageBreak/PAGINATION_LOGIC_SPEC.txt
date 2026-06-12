@@ -1,0 +1,146 @@
+# Wildcard Pagination Engine: Technical Specification & Collision Rules
+Version: 1.1.3
+Last Updated: 2026-05-20 (Enhanced with Atomic Card Supremacy and TextNode Climbing)
+
+## Core Philosophy: "Unit Supremacy"
+Headers and their associated content (Tables, Grids, Lists) are treated as a single, inseparable unit. The engine prioritizes moving the unit root over individual component pushes.
+Additionally, **Atomic Cards (visual containers)** take supreme precedence over their inner layouts. If any content (including nested tables or grids) inside an Atomic Card crosses a page break, the engine pushes the entire card as a whole.
+
+---
+
+## 1. Collision Scenarios & Actions
+
+### Scenario A: Small Unit Push (Atomic Move)
+- **Condition**: A component (e.g., Table) crosses a Page Break, and its associated Header Stack + Table height is ≤ 1123px.
+- **Threshold**: `GAP_TOLERANCE = 150px`
+- **Action**: The engine identifies the topmost header and applies the `margin-top` to that header.
+- **Logic**: `shouldTreatAsAtomic` returns `true`.
+
+### Scenario B: Large Unit with Optimal Header Selection (v1.1.2)
+- **Condition**: A component crosses a Page Break, and Header Stack + Table height exceeds 1123px.
+- **Example**: H1+H2+H3+H4 (400px total) + Table (800px) = 1200px total.
+- **Action**:
+  1. Collect ALL headers in the stack during the climb phase.
+  2. Starting from the LOWEST header, find the first one where (header.top → table.bottom) ≤ 1123px.
+  3. Push from that optimal header (NOT the topmost) to avoid orphaned headers.
+  4. If NO header fits: Force a row-by-row split of the table (`forbidWholesalePush = true`).
+- **Example Outcome**: Push from H3 (leaving H1+H2 on page 1), move H3+H4+Table to page 2.
+
+### Scenario C: Large Unit Split (Original)
+- **Condition**: The combined height of the Header Stack + Content exceeds 1123px AND no optimal header selection applies.
+- **Action**: Forbid wholesale push. Attempt row-by-row internal splitting.
+- **Guard**: `forbidWholesalePush = true`. This prevents infinite loops by forcing split instead of whole-unit push.
+
+### Scenario D: Text Splitting
+- **Condition**: A multi-line text block (Paragraph) crosses a marker.
+- **Action**: Attempt to find a line-break or `<br>` tag to split the component.
+
+---
+
+## 2. Adoption Rules (Climbing Logic)
+
+### TextNode Climbing (NEW v1.1.3)
+- **Logic**: GrapesJS TextNodes do not have a `tagName`. If the collision target is a TextNode, the engine immediately climbs to the parent element before running the inline-tag climber loop.
+- **Goal**: Prevents the engine from treating raw text components as block candidates, which would otherwise result in invalid margin applications on textnodes.
+
+### Atomic Card Bubble-Up (NEW v1.1.3)
+- **Logic**: If the resolved candidate (even if it's a valid inner table, list, or text block) resides within an Atomic Card (any visible container with border, background, or shadow), the engine bubbles up to the card container.
+- **Action**: Overrides the target to point to the card container, sets the page-relative coordinate to the card's top, and flags `forceWrapperPush = true` to push the entire card atomically.
+- **Constraint**: Only applies if the card's total height is < 1123px. Giant cards fall through to layout splitting.
+
+### Header Recognition
+- Direct tags: `H1, H2, H3, H4, H5, H6`.
+- Styled containers: A `DIV` is treated as a header if it contains a heading tag.
+- **Highest Wins**: If both a styled container and a header are found, the engine selects the **topmost** element as the push target.
+
+### Ghost & Spacer Skipping
+- **Threshold**: Elements < 40px with no text content are treated as "Ghosts".
+- **Action**: The engine will jump over these elements to continue searching for a header stack.
+- **Attribute**: Any element with `data-editor-spacer` is automatically skipped.
+
+---
+
+## 3. Collision Resolution Guards
+
+### Atomic Card Guard Priority (NEW v1.1.3)
+- **Logic**: The Atomic Card Guard runs **first** in the push engine (before the Structural Table Guard). This ensures that if a card contains nested tables or grids (e.g. tech badges), the engine pushes the card as a whole rather than splitting the inner layout.
+- **Depth**: Card climbing is increased to `6` levels deep to handle nested structures from the TextNode up to the card wrapper.
+
+### Target Deduplication
+- **Logic**: If multiple broken components point to the same `finalPushTarget`, the orchestrator merges them. Only one push per unit per pass.
+
+### Pass-Through Locking
+- **Logic**: When a component is pushed, all subsequent siblings in the same container are marked as "Shifted" for that pass to prevent redundant "Double Pushes."
+
+### Safety Limits
+- **Max Shift**: 800px.
+- **Max Passes**: 700 iterations.
+
+---
+
+## 4. Optimal Header Selection Algorithm (v1.1.2)
+
+### When is it triggered?
+When a header stack + content unit exceeds 1123px.
+
+### Algorithm Steps
+1. **Collection Phase** (during header climb):
+   - Collect ALL discovered headers in `allHeadersInStack = [{comp, vTop}, ...]`
+   - Order: [H4/lowest, H3, H2, H1/highest] (pushed during reverse iteration)
+   - Store in `pushTargetComp._allHeadersInStack`
+
+2. **Selection Phase** (when unit > 1123px):
+   - Loop from index 0 (lowest header) forward
+   - For each header: `testHeight = unitVBottom - headerInfo.vTop`
+   - If `testHeight ≤ 1123px`: SELECT this header (first one that fits)
+   - If NO header fits: Force split (`forbidWholesalePush = true`)
+
+### Example Walkthrough
+```
+Scenario: H1 (100px) + H2 (100px) + H3 (100px) + H4 (100px) + Table (900px) = 1300px
+
+allHeadersInStack = [
+  { comp: H4, vTop: 1100 },
+  { comp: H3, vTop: 1200 },
+  { comp: H2, vTop: 1300 },
+  { comp: H1, vTop: 1400 },
+]
+
+Iteration:
+- i=0: H4 @ 1100 → testHeight = 2000 - 1100 = 900px ✅ FITS (≤ 1123px)
+- SELECT H4 as finalPushTarget
+- Result: H1+H2+H3 stay on Page 1, H4+Table move to Page 2
+```
+
+---
+
+## 5. File Links (Absolute)
+- **Orchestrator**: [orchestrator.js](file:///d:/Downloads/NitroWriterOptimized/src/components/Editor/utils/pageBreak/orchestrator.js)
+- **Collision Detector**: [collisionDetector.js](file:///d:/Downloads/NitroWriterOptimized/src/components/Editor/utils/pageBreak/detectors/collisionDetector.js)
+- **Push Engine**: [pushEngine.js](file:///d:/Downloads/NitroWriterOptimized/src/components/Editor/utils/pageBreak/pushEngine.js)
+- **Header Formatter**: [headerFormatter.js](file:///d:/Downloads/NitroWriterOptimized/src/components/Editor/utils/pageBreak/formatters/headerFormatter.js)
+
+---
+
+## 6. IMPLEMENTATION NOTES (v1.1.3 Changes)
+
+### Files Modified
+1. **collisionDetector.js**
+   - Intercepts raw TextNodes and climbs to their HTML element container.
+   - Introduces **Atomic Card Bubble-Up** to elevate targets to their card container and correct the `vTop` metric for accurate push-amount calculation.
+
+2. **pushEngine.js**
+   - Swapped priorities to run the **Atomic Card Guard** first (before Structural Tables).
+   - Increased Card Climber search depth to `6` to prevent orphan layout splits inside nested visual cards.
+
+---
+
+> [!IMPORTANT]
+> **MANDATORY INSTRUCTION**: Whenever these files are modified, this specification MUST be updated immediately to maintain synchronization between the code and its documented behavior.
+
+---
+
+### Backward Compatibility
+- Existing non-table logic paths preserved.
+- No changes to orchestrator.js required.
+- forceWrapperPush behavior preserved for atomic units.
